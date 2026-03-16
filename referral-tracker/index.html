@@ -1,12 +1,1274 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>Da Vinci Projects</title>
-<style>body{background:#0a0a0a;color:#e0e0e0;font-family:system-ui;padding:40px;max-width:600px;margin:0 auto}
-a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
-h1{font-size:20px}ul{list-style:none;padding:0}li{padding:8px 0;border-bottom:1px solid #222}</style></head>
-<body><h1>🔺 Da Vinci Projects</h1><ul>
-<li><a href="emergence-sound/">emergence-sound</a> — Conway Game of Life driving spatial audio synthesis</li>
-<li><a href="insight-tracker/">insight-tracker</a> — No description</li>
-<li><a href="mmhc-rnt-alzheimers/">mmhc-rnt-alzheimers</a> — No description</li>
-<li><a href="pain-mapper/">pain-mapper</a> — No description</li>
-<li><a href="projects/">projects</a> — No description</li>
-<li><a href="rnt-alzheimers/">rnt-alzheimers</a> — RNT & Alzheimer's content batch</li>
-</ul><footer style="margin-top:20px;color:#666;font-size:12px">Last updated: 2026-03-13 14:57:49 UTC</footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Referral Source Tracker</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e7ecff;
+      --muted:#a9b3d6;
+      --border:rgba(255,255,255,.10);
+      --border2:rgba(255,255,255,.16);
+      --accent:#56d3ff;
+      --good:#2fe59a;
+      --bad:#ff5f6a;
+      --warn:#f5c451;
+      --gold:#ffcc5c;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1000px 600px at 20% 0%, rgba(86,211,255,.10), transparent 55%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(47,229,154,.10), transparent 52%),
+                  linear-gradient(180deg, #070b16, var(--bg));
+      color:var(--text);
+    }
+
+    a{ color:inherit; }
+
+    .container{
+      max-width: 1180px;
+      padding: 18px 14px 28px;
+      margin: 0 auto;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    h1{
+      font-size: 1.2rem;
+      letter-spacing:.2px;
+      margin:0;
+    }
+
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height:1.35;
+      max-width: 70ch;
+    }
+
+    .pillrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+      flex:1;
+      min-width: 260px;
+    }
+
+    .pill{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 999px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      color: var(--muted);
+      font-size: .86rem;
+      box-shadow: var(--shadow);
+    }
+
+    .pill strong{ color: var(--text); font-weight: 650; }
+
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+
+    .panel h2{
+      margin: 0 0 8px 0;
+      font-size: .98rem;
+      letter-spacing:.2px;
+    }
+
+    .row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .dropzone{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-start;
+      justify-content:center;
+      min-height: 72px;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(86,211,255,.09), rgba(255,255,255,.02));
+      border: 1px dashed rgba(86,211,255,.35);
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .dropzone:focus-visible{ box-shadow: 0 0 0 3px rgba(86,211,255,.25); }
+    .dropzone.dragover{ border-color: rgba(47,229,154,.55); background: linear-gradient(180deg, rgba(47,229,154,.12), rgba(255,255,255,.02)); }
+
+    .dz-title{ font-weight: 650; }
+    .dz-hint{ color: var(--muted); font-size: .9rem; }
+
+    .dz-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    input[type="file"]{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+
+    button{
+      appearance:none;
+      border:1px solid var(--border2);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 9px 11px;
+      cursor:pointer;
+      font-weight: 600;
+    }
+
+    button:hover{ background: rgba(255,255,255,.09); }
+    button:active{ transform: translateY(1px); }
+    button:focus-visible{ outline: 3px solid rgba(86,211,255,.28); outline-offset: 2px; }
+
+    .btn-primary{ border-color: rgba(86,211,255,.55); background: rgba(86,211,255,.12); }
+    .btn-primary:hover{ background: rgba(86,211,255,.18); }
+
+    .btn-ghost{ background: transparent; }
+
+    .filter{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .filter label{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:baseline;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .filter label strong{ color: var(--text); }
+
+    input[type="range"]{
+      width:100%;
+      accent-color: var(--accent);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .chartWrap{
+      position:relative;
+      min-height: 290px;
+    }
+
+    .chartWrap canvas{
+      width:100% !important;
+      height: 270px !important;
+      display:block;
+    }
+
+    .chartHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+
+    .chartHeader .hint{ color: var(--muted); font-size: .86rem; }
+
+    .selectedBadge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .selectedBadge strong{ color: var(--text); }
+
+    .tableWrap{ overflow:auto; border-radius: 12px; border: 1px solid var(--border); }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width: 720px;
+      background: rgba(0,0,0,.10);
+    }
+
+    th, td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align:left;
+      vertical-align:middle;
+      font-size: .92rem;
+    }
+
+    th{
+      position:sticky;
+      top:0;
+      background: rgba(17,26,51,.95);
+      z-index:1;
+      color: var(--muted);
+      font-weight: 700;
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    th:focus-visible{ outline: 3px solid rgba(86,211,255,.25); outline-offset: -2px; }
+
+    tr:hover td{ background: rgba(255,255,255,.03); }
+
+    .sourceBtn{
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin:0;
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 750;
+      text-decoration: underline;
+      text-decoration-color: rgba(86,211,255,.45);
+      text-underline-offset: 3px;
+    }
+
+    .sourceBtn:focus-visible{ outline: 3px solid rgba(86,211,255,.28); border-radius: 6px; }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      font-size: .82rem;
+      white-space:nowrap;
+    }
+
+    .bestRow td{
+      background: rgba(255,204,92,.06);
+    }
+
+    .bestRow td:first-child{
+      border-left: 4px solid rgba(255,204,92,.75);
+    }
+
+    .selectedRow td{
+      background: rgba(255,204,92,.10);
+    }
+
+    .selectedRow:hover td{
+      background: rgba(255,204,92,.14);
+    }
+
+    .muted{ color: var(--muted); }
+
+    .sr-only{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
+
+    .footerNote{ color: var(--muted); font-size: .9rem; line-height:1.35; }
+
+    @media (min-width: 860px){
+      .controls{ grid-template-columns: 1.25fr .75fr; align-items:stretch; }
+      .grid{ grid-template-columns: 1fr 1fr; }
+      .chartWrap{ min-height: 320px; }
+      .chartWrap canvas{ height: 290px !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ scroll-behavior:auto !important; transition:none !important; animation:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">
+        <h1>Referral Source Tracker</h1>
+        <p class="subtitle">Upload a CSV/JSON to compare referral sources by conversion funnel, CPA, and ROI. Click a source name to highlight it across all charts.</p>
+      </div>
+      <div class="pillrow" aria-label="Summary metrics">
+        <div class="pill" title="Number of sources in view"><span class="muted">Sources</span> <strong id="kpiSources">—</strong></div>
+        <div class="pill" title="Total inquiries in view"><span class="muted">Inquiries</span> <strong id="kpiInquiries">—</strong></div>
+        <div class="pill" title="Total conversions in view"><span class="muted">Conversions</span> <strong id="kpiConversions">—</strong></div>
+        <div class="pill" title="Overall conversion rate"><span class="muted">Conv. Rate</span> <strong id="kpiConvRate">—</strong></div>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Controls">
+      <div class="panel">
+        <h2>Data</h2>
+        <div
+          class="dropzone"
+          id="dropzone"
+          tabindex="0"
+          role="button"
+          aria-label="Upload data by dragging and dropping a CSV or JSON file, or press Enter to choose a file"
+        >
+          <div class="dz-title">Drag &amp; drop CSV/JSON here</div>
+          <div class="dz-hint">Or choose a file. Supported fields: <span class="tag">source</span> <span class="tag">inquiries</span> <span class="tag">conversions</span> <span class="tag">cost</span> <span class="tag">timeframe</span></div>
+          <div class="dz-actions">
+            <button class="btn-primary" type="button" id="btnChoose">Choose file</button>
+            <button class="btn-ghost" type="button" id="btnReset" title="Restore embedded sample data">Reset to sample</button>
+            <input id="fileInput" type="file" accept=".csv,.json,text/csv,application/json" aria-label="File picker" />
+            <div class="selectedBadge" aria-live="polite"><span class="muted">Loaded:</span> <strong id="loadedLabel">Sample data</strong></div>
+          </div>
+          <div class="sr-only" id="uploadHelp">If you are using a keyboard, press Enter on the upload box to open the file picker.</div>
+        </div>
+        <p class="footerNote" style="margin:10px 0 0;">Tip: CSV should include a header row. JSON should be an array of objects. All charts work on <code>file://</code>.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Filter &amp; Export</h2>
+        <div class="filter">
+          <label for="convThreshold">
+            <span>Minimum conversion rate</span>
+            <strong id="convThresholdLabel">0.0%</strong>
+          </label>
+          <input
+            id="convThreshold"
+            type="range"
+            min="0"
+            max="100"
+            step="0.5"
+            value="0"
+            aria-label="Minimum conversion rate filter"
+          />
+          <div class="row" style="gap:10px;">
+            <button type="button" id="btnClearSelection" title="Clear highlighted source">Clear highlight</button>
+            <button type="button" class="btn-primary" id="btnExport" title="Export filtered rows to CSV">Export filtered CSV</button>
+          </div>
+          <div class="selectedBadge" aria-live="polite" id="selectedBadge" style="display:none;">
+            <span class="muted">Highlighted:</span> <strong id="selectedLabel">—</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Visualizations">
+      <div class="panel" id="panelFunnel">
+        <div class="chartHeader">
+          <h2 style="margin:0;">Conversion Funnel</h2>
+          <div class="hint">Inquiries → Conversions</div>
+        </div>
+        <div class="chartWrap">
+          <canvas id="chartFunnel" role="img" aria-label="Bar chart showing inquiries and conversions for each referral source"></canvas>
+        </div>
+      </div>
+
+      <div class="panel" id="panelCPA">
+        <div class="chartHeader">
+          <h2 style="margin:0;">Cost Per Acquisition (CPA)</h2>
+          <div class="hint">Cost ÷ Conversions (sorted)</div>
+        </div>
+        <div class="chartWrap">
+          <canvas id="chartCPA" role="img" aria-label="Bar chart of cost per acquisition by referral source, sorted lowest to highest"></canvas>
+        </div>
+      </div>
+
+      <div class="panel" id="panelROI" style="grid-column: 1 / -1;">
+        <div class="chartHeader">
+          <h2 style="margin:0;">ROI Heatmap</h2>
+          <div class="hint">Conversion rate vs. cost (green = better)</div>
+        </div>
+        <div class="chartWrap" style="min-height: 340px;">
+          <canvas id="chartROI" role="img" aria-label="Scatter plot showing conversion rate versus cost with color-coded ROI"></canvas>
+        </div>
+        <p class="footerNote" style="margin:8px 0 0;">Color scoring uses higher conversion rate and lower cost as “better.” Click a point to highlight its source across the dashboard.</p>
+      </div>
+
+      <div class="panel" id="panelTable" style="grid-column: 1 / -1;">
+        <div class="chartHeader">
+          <h2 style="margin:0;">Source Ranking Table</h2>
+          <div class="hint">Click headers to sort</div>
+        </div>
+        <div class="tableWrap" aria-label="Sortable ranking table">
+          <table aria-describedby="tableHelp">
+            <thead>
+              <tr>
+                <th tabindex="0" data-sort="source" aria-label="Sort by source">Source</th>
+                <th tabindex="0" data-sort="inquiries" aria-label="Sort by inquiries">Inquiries</th>
+                <th tabindex="0" data-sort="conversions" aria-label="Sort by conversions">Conversions</th>
+                <th tabindex="0" data-sort="convRate" aria-label="Sort by conversion rate">Conv. Rate</th>
+                <th tabindex="0" data-sort="cost" aria-label="Sort by cost">Cost</th>
+                <th tabindex="0" data-sort="cpa" aria-label="Sort by cost per acquisition">CPA</th>
+                <th tabindex="0" data-sort="timeframe" aria-label="Sort by timeframe">Timeframe</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="sr-only" id="tableHelp">Use arrow keys to move focus between headers. Press Enter or Space to sort by a column. Activate a source name to highlight it in the charts.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Chart.js (CDN allowed by spec) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <script>
+    (function(){
+      'use strict';
+
+      // -------------------------
+      // Sample data (works on file://)
+      // -------------------------
+      const SAMPLE_DATA = [
+        {"source": "Google Ads", "inquiries": 120, "conversions": 18, "cost": 2400},
+        {"source": "Psychology Today", "inquiries": 85, "conversions": 22, "cost": 1800},
+        {"source": "Instagram", "inquiries": 200, "conversions": 12, "cost": 800},
+        {"source": "Word of Mouth", "inquiries": 45, "conversions": 28, "cost": 0},
+        {"source": "Therapist Referrals", "inquiries": 30, "conversions": 24, "cost": 0},
+        {"source": "Yelp", "inquiries": 60, "conversions": 8, "cost": 600}
+      ];
+
+      // -------------------------
+      // DOM
+      // -------------------------
+      const el = {
+        dropzone: document.getElementById('dropzone'),
+        fileInput: document.getElementById('fileInput'),
+        btnChoose: document.getElementById('btnChoose'),
+        btnReset: document.getElementById('btnReset'),
+        btnExport: document.getElementById('btnExport'),
+        btnClearSelection: document.getElementById('btnClearSelection'),
+        loadedLabel: document.getElementById('loadedLabel'),
+        convThreshold: document.getElementById('convThreshold'),
+        convThresholdLabel: document.getElementById('convThresholdLabel'),
+        selectedBadge: document.getElementById('selectedBadge'),
+        selectedLabel: document.getElementById('selectedLabel'),
+        kpiSources: document.getElementById('kpiSources'),
+        kpiInquiries: document.getElementById('kpiInquiries'),
+        kpiConversions: document.getElementById('kpiConversions'),
+        kpiConvRate: document.getElementById('kpiConvRate'),
+        tableBody: document.getElementById('tableBody'),
+        panelFunnel: document.getElementById('panelFunnel'),
+        panelCPA: document.getElementById('panelCPA'),
+        panelROI: document.getElementById('panelROI'),
+      };
+
+      // -------------------------
+      // State
+      // -------------------------
+      let rawData = normalizeRows(SAMPLE_DATA);
+      let selectedSource = null;
+      let sortState = { key: 'convRate', dir: 'desc' };
+
+      // Chart instances
+      let chartFunnel = null;
+      let chartCPA = null;
+      let chartROI = null;
+
+      // -------------------------
+      // Helpers
+      // -------------------------
+      function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+      function toNumber(v){
+        if (v === null || v === undefined || v === '') return 0;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function formatPct01(p){
+        const v = Number.isFinite(p) ? p : 0;
+        return (v * 100).toFixed(1) + '%';
+      }
+
+      function formatPct100(pct){
+        const v = Number.isFinite(pct) ? pct : 0;
+        return v.toFixed(1) + '%';
+      }
+
+      function formatMoney(n){
+        const v = Number.isFinite(n) ? n : 0;
+        return v.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function safeCpa(cost, conversions){
+        const c = toNumber(cost);
+        const conv = toNumber(conversions);
+        if (conv === 0){
+          if (c === 0) return 0;
+          return Infinity;
+        }
+        return c / conv;
+      }
+
+      function safeConvRate(conversions, inquiries){
+        const conv = toNumber(conversions);
+        const inq = toNumber(inquiries);
+        if (inq <= 0) return 0;
+        return conv / inq;
+      }
+
+      function normalizeRows(rows){
+        const out = [];
+        for (const r of (rows || [])){
+          if (!r) continue;
+          const source = String(r.source ?? '').trim();
+          if (!source) continue;
+          const inquiries = toNumber(r.inquiries);
+          const conversions = toNumber(r.conversions);
+          const cost = toNumber(r.cost);
+          const timeframe = (r.timeframe === undefined || r.timeframe === null) ? '' : String(r.timeframe);
+          out.push({ source, inquiries, conversions, cost, timeframe });
+        }
+        // Merge duplicates by source (sum numeric, keep last non-empty timeframe)
+        const by = new Map();
+        for (const r of out){
+          const key = r.source;
+          const prev = by.get(key);
+          if (!prev){
+            by.set(key, { ...r });
+          }else{
+            prev.inquiries += r.inquiries;
+            prev.conversions += r.conversions;
+            prev.cost += r.cost;
+            if (r.timeframe && !prev.timeframe) prev.timeframe = r.timeframe;
+          }
+        }
+        return Array.from(by.values());
+      }
+
+      function derive(rows){
+        return rows.map(r => {
+          const convRate = safeConvRate(r.conversions, r.inquiries);
+          const cpa = safeCpa(r.cost, r.conversions);
+          return { ...r, convRate, cpa };
+        });
+      }
+
+      function getThreshold(){
+        const pct = Number(el.convThreshold.value);
+        return clamp(pct, 0, 100) / 100;
+      }
+
+      function getFilteredDerived(){
+        const threshold = getThreshold();
+        const d = derive(rawData);
+        return d.filter(r => r.convRate > threshold);
+      }
+
+      function bestSourceName(derivedRows){
+        if (!derivedRows.length) return null;
+        let best = derivedRows[0];
+        for (const r of derivedRows){
+          if (r.convRate > best.convRate) best = r;
+        }
+        return best.source;
+      }
+
+      function setSelected(source){
+        selectedSource = source;
+        if (selectedSource){
+          el.selectedBadge.style.display = 'inline-flex';
+          el.selectedLabel.textContent = selectedSource;
+        }else{
+          el.selectedBadge.style.display = 'none';
+          el.selectedLabel.textContent = '—';
+        }
+        renderAll();
+      }
+
+      function downloadText(filename, text){
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2500);
+      }
+
+      // Simple CSV parser for typical small datasets
+      function parseCsv(text){
+        const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim().length);
+        if (!lines.length) return [];
+
+        function splitCsvLine(line){
+          const out = [];
+          let cur = '';
+          let inQuotes = false;
+          for (let i=0; i<line.length; i++){
+            const ch = line[i];
+            if (ch === '"'){
+              if (inQuotes && line[i+1] === '"'){
+                cur += '"';
+                i++;
+              }else{
+                inQuotes = !inQuotes;
+              }
+            }else if (ch === ',' && !inQuotes){
+              out.push(cur);
+              cur = '';
+            }else{
+              cur += ch;
+            }
+          }
+          out.push(cur);
+          return out.map(s => s.trim());
+        }
+
+        const headers = splitCsvLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
+        const rows = [];
+        for (let i=1; i<lines.length; i++){
+          const cols = splitCsvLine(lines[i]);
+          const obj = {};
+          for (let c=0; c<headers.length; c++){
+            obj[headers[c]] = cols[c] ?? '';
+          }
+          rows.push(obj);
+        }
+
+        // Allow alternate header naming (case-insensitive)
+        function pick(obj, name){
+          const lower = name.toLowerCase();
+          for (const k of Object.keys(obj)){
+            if (String(k).trim().toLowerCase() === lower) return obj[k];
+          }
+          return undefined;
+        }
+
+        return rows.map(r => ({
+          source: pick(r, 'source'),
+          inquiries: pick(r, 'inquiries'),
+          conversions: pick(r, 'conversions'),
+          cost: pick(r, 'cost'),
+          timeframe: pick(r, 'timeframe'),
+        }));
+      }
+
+      function parseJson(text){
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('JSON must be an array of objects.');
+        return data;
+      }
+
+      function rowsToCsv(derivedRows){
+        const header = ['source','inquiries','conversions','cost','timeframe','conversion_rate','cpa'];
+        const esc = (v) => {
+          const s = (v === null || v === undefined) ? '' : String(v);
+          if (/["]|,|\n/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+          return s;
+        };
+        const lines = [header.join(',')];
+        for (const r of derivedRows){
+          const cpa = (r.cpa === Infinity) ? 'Infinity' : (Number.isFinite(r.cpa) ? r.cpa.toFixed(2) : '');
+          const convRate = Number.isFinite(r.convRate) ? (r.convRate * 100).toFixed(1) : '';
+          lines.push([
+            esc(r.source),
+            esc(r.inquiries),
+            esc(r.conversions),
+            esc(r.cost),
+            esc(r.timeframe || ''),
+            esc(convRate),
+            esc(cpa)
+          ].join(','));
+        }
+        return lines.join('\n');
+      }
+
+      function setLoadedLabel(text){
+        el.loadedLabel.textContent = text;
+      }
+
+      function updateKpis(derivedRows){
+        const sources = derivedRows.length;
+        const totalInq = derivedRows.reduce((a,r)=>a + toNumber(r.inquiries),0);
+        const totalConv = derivedRows.reduce((a,r)=>a + toNumber(r.conversions),0);
+        const rate = totalInq > 0 ? totalConv/totalInq : 0;
+        el.kpiSources.textContent = String(sources);
+        el.kpiInquiries.textContent = totalInq.toLocaleString();
+        el.kpiConversions.textContent = totalConv.toLocaleString();
+        el.kpiConvRate.textContent = formatPct01(rate);
+      }
+
+      // ROI color score: higher conversion rate and lower cost is better.
+      // Score in [0,1], then map 0->red, 1->green.
+      function computeRoiScore(derivedRows, row){
+        const costs = derivedRows.map(r => toNumber(r.cost));
+        const rates = derivedRows.map(r => Number.isFinite(r.convRate) ? r.convRate : 0);
+        const minC = Math.min(...costs, 0);
+        const maxC = Math.max(...costs, 1);
+        const minR = Math.min(...rates, 0);
+        const maxR = Math.max(...rates, 1);
+        const costN = (maxC - minC) > 0 ? (toNumber(row.cost) - minC) / (maxC - minC) : 0;
+        const rateN = (maxR - minR) > 0 ? (row.convRate - minR) / (maxR - minR) : 0;
+        const score = clamp(0.55 * rateN + 0.45 * (1 - costN), 0, 1);
+        return score;
+      }
+
+      function mixColorRGB(a, b, t){
+        const ar = a[0], ag = a[1], ab = a[2];
+        const br = b[0], bg = b[1], bb = b[2];
+        const r = Math.round(ar + (br - ar) * t);
+        const g = Math.round(ag + (bg - ag) * t);
+        const bl = Math.round(ab + (bb - ab) * t);
+        return `rgb(${r},${g},${bl})`;
+      }
+
+      function roiColor(score){
+        // red -> yellow -> green (brighter colors for better visibility)
+        const red = [255, 68, 68];
+        const yel = [255, 200, 80];
+        const grn = [0, 255, 136];
+        if (score < 0.5){
+          return mixColorRGB(red, yel, score / 0.5);
+        }
+        return mixColorRGB(yel, grn, (score - 0.5) / 0.5);
+      }
+      // -------------------------
+      // Rendering
+      // -------------------------
+      function renderAll(){
+        const derived = getFilteredDerived();
+        updateKpis(derived);
+
+        const bestName = bestSourceName(derived);
+        renderFunnel(derived, bestName);
+        renderCPA(derived, bestName);
+        renderROI(derived, bestName);
+        renderTable(derived, bestName);
+      }
+
+      function renderFunnel(derived, bestName){
+        const labels = derived.map(r => r.source);
+        const inquiries = derived.map(r => r.inquiries);
+        const conversions = derived.map(r => r.conversions);
+
+        const baseInq = 'rgba(169,179,214,.35)';
+        const baseConv = 'rgba(86,211,255,.60)';
+
+        const inqColors = labels.map(name => {
+          if (name === selectedSource) return 'rgba(255,204,92,.55)';
+          return baseInq;
+        });
+        const convColors = labels.map(name => {
+          if (name === selectedSource) return 'rgba(255,204,92,.85)';
+          return baseConv;
+        });
+
+        const convBorders = labels.map(name => name === bestName ? 'rgba(255,204,92,.9)' : 'rgba(255,255,255,.12)');
+        const convBorderWidth = labels.map(name => (name === bestName ? 2 : 1));
+
+        const data = {
+          labels,
+          datasets: [
+            {
+              label: 'Inquiries',
+              data: inquiries,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,.10)',
+              backgroundColor: inqColors,
+              barThickness: 14,
+              maxBarThickness: 16,
+            },
+            {
+              label: 'Conversions',
+              data: conversions,
+              borderWidth: convBorderWidth,
+              borderColor: convBorders,
+              backgroundColor: convColors,
+              barThickness: 14,
+              maxBarThickness: 16,
+            }
+          ]
+        };
+
+        const options = {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          interaction: { mode: 'nearest', axis: 'y', intersect: true },
+          plugins: {
+            legend: { labels: { color: 'rgba(231,236,255,.85)' } },
+            tooltip: {
+              callbacks: {
+                afterBody: (items) => {
+                  if (!items || !items.length) return '';
+                  const idx = items[0].dataIndex;
+                  const r = derived[idx];
+                  return [
+                    `Conversion rate: ${formatPct01(r.convRate)}`,
+                    `CPA: ${formatCpaForDisplay(r.cpa)}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: 'rgba(231,236,255,.75)' },
+              grid: { color: 'rgba(255,255,255,.08)' }
+            },
+            y: {
+              ticks: { color: 'rgba(231,236,255,.85)' },
+              grid: { display: false }
+            }
+          },
+          onClick: (evt, elements) => {
+            if (!elements || !elements.length) return;
+            const idx = elements[0].index;
+            const name = labels[idx];
+            setSelected(name);
+          }
+        };
+
+        if (!chartFunnel){
+          chartFunnel = new Chart(document.getElementById('chartFunnel'), { type: 'bar', data, options });
+        }else{
+          chartFunnel.data = data;
+          chartFunnel.options = options;
+          chartFunnel.update();
+        }
+      }
+
+      function formatCpaForDisplay(cpa){
+        if (cpa === Infinity) return '∞';
+        return formatMoney(cpa);
+      }
+
+      function renderCPA(derived, bestName){
+        // Sort by CPA (Infinity last)
+        const withCpa = derived.slice().map(r => ({...r}));
+        withCpa.sort((a,b) => {
+          const ca = a.cpa, cb = b.cpa;
+          const aa = (ca === Infinity) ? Number.POSITIVE_INFINITY : ca;
+          const bb = (cb === Infinity) ? Number.POSITIVE_INFINITY : cb;
+          if (aa !== bb) return aa - bb;
+          return b.conversions - a.conversions;
+        });
+
+        const labels = withCpa.map(r => r.source);
+        const values = withCpa.map(r => (r.cpa === Infinity ? null : Number(r.cpa.toFixed(2))));
+
+        const colors = labels.map(name => {
+          if (name === selectedSource) return 'rgba(255,204,92,.85)';
+          return 'rgba(47,229,154,.55)';
+        });
+
+        const borders = labels.map(name => name === bestName ? 'rgba(255,204,92,.9)' : 'rgba(255,255,255,.12)');
+        const borderWidth = labels.map(name => name === bestName ? 2 : 1);
+
+        const data = {
+          labels,
+          datasets: [{
+            label: 'CPA',
+            data: values,
+            backgroundColor: colors,
+            borderColor: borders,
+            borderWidth,
+            borderRadius: 8
+          }]
+        };
+
+        const options = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const idx = ctx.dataIndex;
+                  const r = withCpa[idx];
+                  return `${r.source}: ${formatCpaForDisplay(r.cpa)}`;
+                },
+                afterLabel: (ctx) => {
+                  const idx = ctx.dataIndex;
+                  const r = withCpa[idx];
+                  return `Conversions: ${r.conversions} • Cost: ${formatMoney(r.cost)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: 'rgba(231,236,255,.8)' },
+              grid: { display: false }
+            },
+            y: {
+              ticks: {
+                color: 'rgba(231,236,255,.75)',
+                callback: (v) => {
+                  const n = Number(v);
+                  if (!Number.isFinite(n)) return '';
+                  // compact-ish currency
+                  return '$' + n.toFixed(0);
+                }
+              },
+              grid: { color: 'rgba(255,255,255,.08)' }
+            }
+          },
+          onClick: (evt, elements) => {
+            if (!elements || !elements.length) return;
+            const idx = elements[0].index;
+            const name = labels[idx];
+            setSelected(name);
+          }
+        };
+
+        if (!chartCPA){
+          chartCPA = new Chart(document.getElementById('chartCPA'), { type:'bar', data, options });
+        }else{
+          chartCPA.data = data;
+          chartCPA.options = options;
+          chartCPA.update();
+        }
+      }
+
+      function renderROI(derived, bestName){
+        const points = derived.map(r => {
+          const score = computeRoiScore(derived, r);
+          return {
+            x: toNumber(r.cost),
+            y: Number((r.convRate * 100).toFixed(1)),
+            _source: r.source,
+            _score: score,
+            _cpa: r.cpa,
+            _conversions: r.conversions,
+            _inquiries: r.inquiries
+          };
+        });
+
+        const bgColors = points.map(p => {
+          if (p._source === selectedSource) return 'rgba(255,204,92,.95)';
+          return roiColor(p._score);
+        });
+
+        const borderColors = points.map(p => {
+          if (p._source === bestName) return 'rgba(255,204,92,.95)';
+          return 'rgba(255,255,255,.7)';
+        });
+
+        const borderWidth = points.map(p => (p._source === bestName ? 3 : 2));
+        
+        // Scale radius based on conversions (more conversions = bigger point)
+        const maxConv = Math.max(...points.map(p => p._conversions), 1);
+        const radii = points.map(p => {
+          const baseSize = 10;
+          const scaledSize = baseSize + (p._conversions / maxConv) * 6;
+          return p._source === selectedSource ? scaledSize + 3 : scaledSize;
+        });
+
+        const data = {
+          datasets: [{
+            label: 'Sources',
+            data: points,
+            parsing: false,
+            pointBackgroundColor: bgColors,
+            pointBorderColor: borderColors,
+            pointBorderWidth: borderWidth,
+            pointRadius: radii,
+            pointHoverRadius: radii.map(r => r + 4),
+            pointHitRadius: 15,
+          }]
+        };
+
+        const options = {
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{
+            legend:{ display:false },
+            tooltip:{
+              callbacks:{
+                title: (items) => items?.[0]?.raw?._source || '',
+                label: (ctx) => {
+                  const p = ctx.raw;
+                  return `Cost: ${formatMoney(p.x)} • Conv. rate: ${formatPct100(p.y)}`;
+                },
+                afterLabel: (ctx) => {
+                  const p = ctx.raw;
+                  return [`Inquiries: ${p._inquiries} • Conversions: ${p._conversions}`, `CPA: ${formatCpaForDisplay(p._cpa)}`];
+                }
+              }
+            }
+          },
+          scales:{
+            x:{
+              title:{ display:true, text:'Cost (USD)', color:'rgba(231,236,255,.75)' },
+              ticks:{ color:'rgba(231,236,255,.75)' },
+              grid:{ color:'rgba(255,255,255,.08)' }
+            },
+            y:{
+              title:{ display:true, text:'Conversion rate (%)', color:'rgba(231,236,255,.75)' },
+              ticks:{ color:'rgba(231,236,255,.75)', callback: (v)=> v + '%' },
+              grid:{ color:'rgba(255,255,255,.08)' },
+              suggestedMin: 0,
+              suggestedMax: 100
+            }
+          },
+          onClick: (evt, elements) => {
+            if (!elements || !elements.length) return;
+            const idx = elements[0].index;
+            const p = points[idx];
+            if (p && p._source) setSelected(p._source);
+          }
+        };
+
+        if (!chartROI){
+          chartROI = new Chart(document.getElementById('chartROI'), { type:'scatter', data, options });
+        }else{
+          chartROI.data = data;
+          chartROI.options = options;
+          chartROI.update();
+        }
+      }
+
+      function renderTable(derived, bestName){
+        const rows = derived.slice();
+
+        // Sorting
+        const { key, dir } = sortState;
+        const mult = (dir === 'asc') ? 1 : -1;
+        rows.sort((a,b) => {
+          if (key === 'source' || key === 'timeframe'){
+            const aa = String(a[key] || '').toLowerCase();
+            const bb = String(b[key] || '').toLowerCase();
+            if (aa < bb) return -1 * mult;
+            if (aa > bb) return 1 * mult;
+            return 0;
+          }
+          const av = (key === 'cpa') ? (a.cpa === Infinity ? Number.POSITIVE_INFINITY : a.cpa) : a[key];
+          const bv = (key === 'cpa') ? (b.cpa === Infinity ? Number.POSITIVE_INFINITY : b.cpa) : b[key];
+          if (av < bv) return -1 * mult;
+          if (av > bv) return 1 * mult;
+          // tie-breaker
+          return (b.conversions - a.conversions) * mult;
+        });
+
+        el.tableBody.innerHTML = '';
+        for (const r of rows){
+          const tr = document.createElement('tr');
+          if (r.source === bestName) tr.classList.add('bestRow');
+          if (selectedSource && r.source === selectedSource) tr.classList.add('selectedRow');
+
+          const cpaDisplay = (r.cpa === Infinity) ? '∞' : (formatMoney(r.cpa));
+
+          tr.innerHTML = `
+            <td>
+              <button type="button" class="sourceBtn" data-source="${escapeHtml(r.source)}" aria-label="Highlight ${escapeHtml(r.source)}">${escapeHtml(r.source)}</button>
+            </td>
+            <td>${escapeHtml(String(r.inquiries))}</td>
+            <td>${escapeHtml(String(r.conversions))}</td>
+            <td>${escapeHtml(formatPct01(r.convRate))}</td>
+            <td>${escapeHtml(formatMoney(r.cost))}</td>
+            <td>${escapeHtml(cpaDisplay)}</td>
+            <td>${escapeHtml(r.timeframe || '')}</td>
+          `;
+          el.tableBody.appendChild(tr);
+        }
+
+        // Source click handlers
+        el.tableBody.querySelectorAll('button[data-source]').forEach(btn => {
+          btn.addEventListener('click', () => setSelected(btn.getAttribute('data-source')));
+        });
+
+        // Update best highlight if best is currently selected (gold) - already on best row.
+      }
+
+      function escapeHtml(s){
+        return String(s)
+          .replace(/&/g,'&amp;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;')
+          .replace(/'/g,'&#39;');
+      }
+
+      // -------------------------
+      // Event wiring
+      // -------------------------
+      function handleFile(file){
+        if (!file) return;
+        const name = file.name || 'uploaded file';
+        const reader = new FileReader();
+        reader.onerror = () => alert('Could not read file.');
+        reader.onload = () => {
+          try{
+            const text = String(reader.result || '');
+            let rows;
+            if (name.toLowerCase().endsWith('.json')){
+              rows = parseJson(text);
+            }else if (name.toLowerCase().endsWith('.csv')){
+              rows = parseCsv(text);
+            }else{
+              // sniff
+              const trimmed = text.trim();
+              if (trimmed.startsWith('[') || trimmed.startsWith('{')) rows = parseJson(text);
+              else rows = parseCsv(text);
+            }
+            const norm = normalizeRows(rows);
+            if (!norm.length) throw new Error('No valid rows found. Ensure each row has a non-empty "source".');
+            rawData = norm;
+            setLoadedLabel(name);
+            // If selection no longer exists, clear.
+            if (selectedSource && !rawData.some(r => r.source === selectedSource)) selectedSource = null;
+            renderAll();
+          }catch(err){
+            alert('Upload error: ' + (err && err.message ? err.message : String(err)));
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      el.btnChoose.addEventListener('click', () => el.fileInput.click());
+      el.dropzone.addEventListener('click', (e) => {
+        // avoid clicking on inner buttons double-triggering
+        if (e.target && e.target.closest('button')) return;
+        el.fileInput.click();
+      });
+      el.dropzone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          el.fileInput.click();
+        }
+      });
+
+      el.fileInput.addEventListener('change', () => {
+        const file = el.fileInput.files && el.fileInput.files[0];
+        handleFile(file);
+        // allow re-uploading same file
+        el.fileInput.value = '';
+      });
+
+      el.dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        el.dropzone.classList.add('dragover');
+      });
+      el.dropzone.addEventListener('dragleave', () => el.dropzone.classList.remove('dragover'));
+      el.dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.dropzone.classList.remove('dragover');
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        handleFile(file);
+      });
+
+      el.btnReset.addEventListener('click', () => {
+        rawData = normalizeRows(SAMPLE_DATA);
+        selectedSource = null;
+        setLoadedLabel('Sample data');
+        renderAll();
+      });
+
+      el.btnClearSelection.addEventListener('click', () => setSelected(null));
+
+      el.convThreshold.addEventListener('input', () => {
+        el.convThresholdLabel.textContent = Number(el.convThreshold.value).toFixed(1) + '%';
+        // Keep selection; just re-render.
+        renderAll();
+      });
+
+      el.btnExport.addEventListener('click', () => {
+        const derived = getFilteredDerived();
+        const csv = rowsToCsv(derived);
+        downloadText('referral_sources_filtered.csv', csv);
+      });
+
+      // Table sorting via click and keyboard
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        const apply = () => {
+          const key = th.getAttribute('data-sort');
+          if (!key) return;
+          if (sortState.key === key){
+            sortState.dir = (sortState.dir === 'asc') ? 'desc' : 'asc';
+          }else{
+            sortState.key = key;
+            // default direction
+            sortState.dir = (key === 'source' || key === 'timeframe') ? 'asc' : 'desc';
+          }
+          renderAll();
+        };
+        th.addEventListener('click', apply);
+        th.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            apply();
+          }
+        });
+      });
+
+      // Initialize labels
+      el.convThresholdLabel.textContent = Number(el.convThreshold.value).toFixed(1) + '%';
+
+      // Guard if Chart.js fails to load
+      if (!window.Chart){
+        alert('Chart.js failed to load. This dashboard requires Chart.js.');
+        return;
+      }
+
+      // Global Chart defaults (dark theme)
+      Chart.defaults.color = 'rgba(231,236,255,.85)';
+      Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+
+      renderAll();
+
+    })();
+  </script>
+</body>
+</html>
