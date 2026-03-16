@@ -1,0 +1,1503 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Governance Tracer</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1621;
+      --panel2:#0c121b;
+      --text:#e6edf3;
+      --muted:#9db0c2;
+      --border:#213043;
+      --accent:#6aa9ff;
+      --good:#34d399;
+      --bad:#fb7185;
+      --gated:#60a5fa;
+      --warn:#fbbf24;
+      --shadow: 0 12px 35px rgba(0,0,0,.45);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:var(--sans); background:radial-gradient(1200px 800px at 18% -20%, rgba(106,169,255,.18), transparent 60%), radial-gradient(900px 700px at 90% 10%, rgba(52,211,153,.10), transparent 60%), var(--bg); color:var(--text)}
+    header{
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(to bottom, rgba(11,15,20,.92), rgba(11,15,20,.70));
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(33,48,67,.8);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:18px 14px}
+    .titlebar{display:flex; align-items:flex-start; justify-content:space-between; gap:14px}
+    .brand h1{margin:0; font-size:20px; letter-spacing:.2px}
+    .brand p{margin:6px 0 0; color:var(--muted); font-size:12px; line-height:1.35}
+    .status{font-family:var(--mono); font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:6px; align-items:flex-end}
+    .status .pill{padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(15,22,33,.75)}
+
+    .grid{display:grid; grid-template-columns: 1.2fr .8fr; gap:14px; align-items:start}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .panel{background:linear-gradient(180deg, rgba(15,22,33,.95), rgba(12,18,27,.92)); border:1px solid rgba(33,48,67,.9); border-radius:14px; box-shadow:var(--shadow)}
+    .panel .hd{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px 10px; border-bottom:1px solid rgba(33,48,67,.8)}
+    .panel .hd h2{margin:0; font-size:13px; letter-spacing:.2px; color:#d9e4ee}
+    .panel .bd{padding:12px}
+
+    .controls{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width: 720px){ .controls{grid-template-columns:1fr} }
+
+    .field{display:flex; flex-direction:column; gap:6px}
+    label{font-size:12px; color:var(--muted)}
+    input[type="text"], input[type="datetime-local"], select{
+      background:rgba(10,16,24,.8);
+      border:1px solid rgba(33,48,67,.95);
+      color:var(--text);
+      border-radius:10px;
+      padding:10px 10px;
+      outline:none;
+    }
+    input[type="text"]::placeholder{color:rgba(157,176,194,.55)}
+    input[type="datetime-local"]{color-scheme: dark}
+
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .btn{
+      appearance:none;
+      border:1px solid rgba(33,48,67,.95);
+      background:linear-gradient(180deg, rgba(18,28,42,.95), rgba(10,16,24,.95));
+      color:var(--text);
+      border-radius:10px;
+      padding:10px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .btn:hover{border-color:rgba(106,169,255,.7)}
+    .btn.primary{border-color:rgba(106,169,255,.85); box-shadow:0 0 0 2px rgba(106,169,255,.12) inset}
+    .btn.danger{border-color:rgba(251,113,133,.75)}
+
+    .checks{display:flex; flex-wrap:wrap; gap:10px}
+    .check{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); padding:8px 10px; border:1px solid rgba(33,48,67,.9); border-radius:999px; background:rgba(10,16,24,.55)}
+    .check input{accent-color: var(--accent)}
+
+    .canvasWrap{position:relative; height:420px}
+    @media (max-width: 980px){ .canvasWrap{height:420px} }
+    canvas{width:100%; height:100%}
+
+    .legend{display:flex; gap:10px; flex-wrap:wrap; align-items:center; font-size:12px; color:var(--muted)}
+    .dot{width:10px; height:10px; border-radius:999px; display:inline-block; margin-right:6px}
+
+    .metrics{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width: 980px){ .metrics{grid-template-columns:1fr} }
+    .kpi{padding:10px; border:1px solid rgba(33,48,67,.85); border-radius:12px; background:rgba(10,16,24,.45)}
+    .kpi h3{margin:0 0 6px; font-size:12px; color:var(--muted); font-weight:600}
+    .kpi .v{font-family:var(--mono); font-size:14px; color:#d9e4ee; line-height:1.35}
+    .kpi .s{font-size:11px; color:rgba(157,176,194,.8); margin-top:6px; line-height:1.35}
+
+    .split{display:grid; grid-template-columns:1fr; gap:10px}
+    .mini{height:180px; position:relative}
+
+    table{width:100%; border-collapse:separate; border-spacing:0; font-size:12px; overflow:hidden; border:1px solid rgba(33,48,67,.85); border-radius:12px}
+    th, td{padding:9px 10px; border-bottom:1px solid rgba(33,48,67,.6); vertical-align:top}
+    th{position:sticky; top:0; background:rgba(15,22,33,.98); color:rgba(157,176,194,.95); text-align:left; font-weight:600}
+    tr:last-child td{border-bottom:none}
+    td.mono{font-family:var(--mono)}
+    .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid rgba(33,48,67,.9); background:rgba(10,16,24,.55); font-size:11px; color:rgba(230,237,243,.92)}
+    .bLow{border-color: rgba(106,169,255,.35)}
+    .bMed{border-color: rgba(251,191,36,.35)}
+    .bHigh{border-color: rgba(251,113,133,.35)}
+    .bOk{border-color: rgba(52,211,153,.45)}
+    .bFail{border-color: rgba(251,113,133,.55)}
+    .bGate{border-color: rgba(96,165,250,.55)}
+
+    .tooltip{
+      position:absolute; pointer-events:none; display:none;
+      min-width: 220px; max-width: 340px;
+      background:rgba(7,10,14,.95);
+      border:1px solid rgba(33,48,67,.9);
+      border-radius:12px;
+      box-shadow:var(--shadow);
+      padding:10px;
+      font-size:12px;
+      color:rgba(230,237,243,.95);
+    }
+    .tooltip .t{font-family:var(--mono); font-size:11px; color:rgba(157,176,194,.9); margin-bottom:6px}
+    .tooltip .k{color:rgba(157,176,194,.9)}
+    .tooltip .v{color:rgba(230,237,243,.95)}
+    .muted{color:var(--muted)}
+    .note{font-size:12px; color:rgba(157,176,194,.9); line-height:1.45}
+    .mono{font-family:var(--mono)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="titlebar">
+      <div class="brand">
+        <h1>Governance Tracer</h1>
+        <p>Interactive governance dashboard to trace agent decision-making patterns from <span class="mono">actions.log</span> and gate approvals in <span class="mono">gates/</span>.</p>
+      </div>
+      <div class="status">
+        <div class="pill" id="loadPill">Status: <span id="loadStatus">idle</span></div>
+        <div class="pill">Filtered decisions: <span id="filteredCount">0</span> / <span id="totalCount">0</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-top:14px; padding-bottom:24px">
+  <div class="grid">
+    <section class="panel">
+      <div class="hd">
+        <h2>Timeline</h2>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--good)"></span>success</span>
+          <span><span class="dot" style="background:var(--bad)"></span>fail</span>
+          <span><span class="dot" style="background:var(--gated)"></span>gated</span>
+          <span><span class="dot" style="background:#94a3b8"></span>other</span>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="controls" style="margin-bottom:12px">
+          <div class="field">
+            <label>Data source</label>
+            <div class="row">
+              <button class="btn primary" id="btnLoadDefault">Load default paths</button>
+              <button class="btn" id="btnDemo">Use demo data</button>
+              <button class="btn danger" id="btnClear">Clear</button>
+            </div>
+            <div class="note" style="margin-top:6px">
+              If opening this file via <span class="mono">file://</span>, browsers often block <span class="mono">fetch()</span>. Use the file pickers below.
+            </div>
+          </div>
+          <div class="field">
+            <label>Import files</label>
+            <div class="row">
+              <input class="btn" style="padding:8px 10px" type="file" id="fileActions" accept=".log,.txt" />
+              <input class="btn" style="padding:8px 10px" type="file" id="fileGates" webkitdirectory directory multiple />
+            </div>
+            <div class="note" style="margin-top:6px">Select <span class="mono">actions.log</span>, then select the <span class="mono">gates/</span> folder (optional).</div>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-bottom:12px">
+          <div class="field">
+            <label>Date range</label>
+            <div class="row">
+              <input type="datetime-local" id="dtStart" />
+              <span class="muted">to</span>
+              <input type="datetime-local" id="dtEnd" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Search</label>
+            <input type="text" id="q" placeholder="filter by action, file, description, outcome…" />
+          </div>
+          <div class="field">
+            <label>Tiers</label>
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="tierLOW" checked /> LOW</label>
+              <label class="check"><input type="checkbox" id="tierMED" checked /> MED</label>
+              <label class="check"><input type="checkbox" id="tierHIGH" checked /> HIGH</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Outcome</label>
+            <select id="outcome">
+              <option value="all">All outcomes</option>
+              <option value="success">success</option>
+              <option value="fail">fail</option>
+              <option value="gated">gated</option>
+              <option value="other">other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Bubble size</label>
+            <select id="bubbleSize">
+              <option value="duration_ms">duration_ms</option>
+              <option value="cost">cost</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Actions table rows</label>
+            <select id="tableLimit">
+              <option value="100">100</option>
+              <option value="200" selected>200</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="canvasWrap">
+          <canvas id="timeline"></canvas>
+          <div class="tooltip" id="tooltip"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="hd">
+        <h2>Metrics</h2>
+        <div class="muted" style="font-size:12px">Updates with filters</div>
+      </div>
+      <div class="bd">
+        <div class="metrics" style="margin-bottom:10px">
+          <div class="kpi">
+            <h3>Decision velocity (per day)</h3>
+            <div class="v" id="kpiVelocity">—</div>
+            <div class="s" id="kpiVelocitySub">—</div>
+          </div>
+          <div class="kpi">
+            <h3>Gate utilization rate</h3>
+            <div class="v" id="kpiGate">—</div>
+            <div class="s" id="kpiGateSub">—</div>
+          </div>
+          <div class="kpi">
+            <h3>Gate Approval Latency</h3>
+            <div class="v" id="kpiGateLatency">—</div>
+            <div class="s" id="kpiGateLatencySub">—</div>
+          </div>
+          <div class="kpi">
+            <h3>Failure correlation vs tier</h3>
+            <div class="v" id="kpiCorr">—</div>
+            <div class="s" id="kpiCorrSub">—</div>
+          </div>
+          <div class="kpi">
+            <h3>Cost distribution</h3>
+            <div class="v" id="kpiCost">—</div>
+            <div class="s" id="kpiCostSub">—</div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel" style="border-radius:12px; box-shadow:none">
+            <div class="hd">
+              <h2>Cost histogram (filtered)</h2>
+              <div class="muted" style="font-size:12px">bins=10</div>
+            </div>
+            <div class="bd">
+              <div class="mini">
+                <canvas id="costHist"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="border-radius:12px; box-shadow:none">
+            <div class="hd">
+              <h2>Actions (filtered)</h2>
+              <div class="muted" style="font-size:12px">sorted newest first</div>
+            </div>
+            <div class="bd" style="padding:0">
+              <div style="max-height:360px; overflow:auto">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:142px">timestamp</th>
+                      <th style="width:90px">tier</th>
+                      <th style="width:90px">outcome</th>
+                      <th style="width:120px">duration/cost</th>
+                      <th>action • file • description</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Expected action line format:<br/>
+            <span class="mono">[timestamp] | [tier] | [action] | [file] | [description] | [outcome] | [duration_ms] | [cost]</span><br/>
+            Expected gate files in <span class="mono">gates/</span>: <span class="mono">request-HASH.json</span> and <span class="mono">approval-HASH.json</span> (SHA256 hash + timestamps).
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+/*
+  Embedded Chart.js-compatible mini engine.
+  The task specifies Chart.js for visualization; this file includes a small, self-contained implementation
+  of the Chart.js-style API used here (scatter/bubble + bar).
+*/
+(function(){
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function niceNum(range, round){
+    if (range === 0) return 1;
+    const exponent = Math.floor(Math.log10(Math.abs(range)));
+    const fraction = range / Math.pow(10, exponent);
+    let niceFraction;
+    if (round){
+      if (fraction < 1.5) niceFraction = 1;
+      else if (fraction < 3) niceFraction = 2;
+      else if (fraction < 7) niceFraction = 5;
+      else niceFraction = 10;
+    } else {
+      if (fraction <= 1) niceFraction = 1;
+      else if (fraction <= 2) niceFraction = 2;
+      else if (fraction <= 5) niceFraction = 5;
+      else niceFraction = 10;
+    }
+    return niceFraction * Math.pow(10, exponent);
+  }
+  function ticks(min, max, count){
+    if (!isFinite(min) || !isFinite(max)) return [];
+    if (min === max){
+      const pad = (min === 0 ? 1 : Math.abs(min) * 0.1);
+      min -= pad; max += pad;
+    }
+    const range = niceNum(max - min, false);
+    const step = niceNum(range / Math.max(1, count - 1), true);
+    const niceMin = Math.floor(min / step) * step;
+    const niceMax = Math.ceil(max / step) * step;
+    const out = [];
+    for (let v = niceMin; v <= niceMax + step/2; v += step) out.push(v);
+    return out;
+  }
+  function fmtTime(ms){
+    const d = new Date(ms);
+    const pad = (n)=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function quantile(arr, q){
+    if (!arr.length) return NaN;
+    const a = arr.slice().sort((x,y)=>x-y);
+    const pos = (a.length-1)*q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    if (a[base+1] !== undefined) return a[base] + rest*(a[base+1]-a[base]);
+    return a[base];
+  }
+
+  class Chart {
+    constructor(ctx, config){
+      this.canvas = ctx && ctx.canvas ? ctx.canvas : ctx;
+      this.ctx = this.canvas.getContext('2d');
+      this.config = config || {};
+      this.type = this.config.type || 'scatter';
+      this.data = this.config.data || { datasets: [] };
+      this.options = this.config.options || {};
+      this._handlers = [];
+      this._devicePixelRatio = window.devicePixelRatio || 1;
+      this._resizeObserver = null;
+      this._lastGeom = null;
+      this._init();
+      this.update();
+    }
+    _init(){
+      const resize = ()=>{ this.resize(); this.update(); };
+      if ('ResizeObserver' in window){
+        this._resizeObserver = new ResizeObserver(resize);
+        this._resizeObserver.observe(this.canvas.parentElement || this.canvas);
+      } else {
+        window.addEventListener('resize', resize);
+        this._handlers.push(['resize', resize]);
+      }
+    }
+    destroy(){
+      if (this._resizeObserver) this._resizeObserver.disconnect();
+      for (const [ev, fn] of this._handlers) window.removeEventListener(ev, fn);
+      this._handlers = [];
+      this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+    }
+    resize(){
+      const rect = this.canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      this._devicePixelRatio = dpr;
+      const w = Math.max(1, Math.floor(rect.width * dpr));
+      const h = Math.max(1, Math.floor(rect.height * dpr));
+      if (this.canvas.width !== w || this.canvas.height !== h){
+        this.canvas.width = w;
+        this.canvas.height = h;
+      }
+    }
+    update(){
+      this.resize();
+      this._render();
+    }
+    _render(){
+      const ctx = this.ctx;
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+      ctx.clearRect(0,0,w,h);
+
+      const padding = (this.options.layout && this.options.layout.padding) || {left: 56, right: 18, top: 16, bottom: 40};
+      const plot = {
+        x: padding.left,
+        y: padding.top,
+        w: Math.max(1, w - padding.left - padding.right),
+        h: Math.max(1, h - padding.top - padding.bottom)
+      };
+
+      const bg = (this.options.plugins && this.options.plugins._bg) || 'rgba(10,16,24,.35)';
+      ctx.fillStyle = bg;
+      ctx.fillRect(plot.x, plot.y, plot.w, plot.h);
+
+      const type = this.type;
+      if (type === 'bar') this._renderBar(plot);
+      else this._renderScatter(plot); // scatter/bubble
+    }
+
+    _renderAxes(plot, xTicks, yTicks, xFmt, yFmt){
+      const ctx = this.ctx;
+      const grid = (this.options.scales && this.options.scales._gridColor) || 'rgba(33,48,67,.55)';
+      const axis = (this.options.scales && this.options.scales._axisColor) || 'rgba(157,176,194,.85)';
+      const text = (this.options.scales && this.options.scales._textColor) || 'rgba(157,176,194,.88)';
+      const fontPx = Math.max(10, Math.floor(11 * this._devicePixelRatio));
+      ctx.font = `${fontPx}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+
+      // grid + ticks
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(plot.x, plot.y, plot.w, plot.h);
+      ctx.clip();
+
+      // y grid
+      ctx.strokeStyle = grid;
+      ctx.lineWidth = 1;
+      for (const t of yTicks){
+        const py = t._py;
+        ctx.beginPath();
+        ctx.moveTo(plot.x, py);
+        ctx.lineTo(plot.x + plot.w, py);
+        ctx.stroke();
+      }
+      // x grid
+      for (const t of xTicks){
+        const px = t._px;
+        ctx.beginPath();
+        ctx.moveTo(px, plot.y);
+        ctx.lineTo(px, plot.y + plot.h);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // axes box
+      ctx.strokeStyle = grid;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
+
+      // y labels
+      ctx.fillStyle = text;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (const t of yTicks){
+        const label = yFmt ? yFmt(t.value) : String(t.value);
+        ctx.fillText(label, plot.x - 10*this._devicePixelRatio, t._py);
+      }
+
+      // x labels
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (const t of xTicks){
+        const label = xFmt ? xFmt(t.value) : String(t.value);
+        ctx.fillText(label, t._px, plot.y + plot.h + 10*this._devicePixelRatio);
+      }
+
+      // axis titles (optional)
+      const scales = this.options.scales || {};
+      const xTitle = scales.x && scales.x.title && scales.x.title.text;
+      const yTitle = scales.y && scales.y.title && scales.y.title.text;
+      ctx.fillStyle = axis;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      if (xTitle) ctx.fillText(String(xTitle), plot.x + plot.w/2, plot.y + plot.h + 26*this._devicePixelRatio);
+
+      if (yTitle){
+        ctx.save();
+        ctx.translate(plot.x - 42*this._devicePixelRatio, plot.y + plot.h/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(String(yTitle), 0, 0);
+        ctx.restore();
+      }
+    }
+
+    _renderScatter(plot){
+      const datasets = this.data.datasets || [];
+      // flatten points
+      const pts = [];
+      for (const ds of datasets){
+        const data = ds.data || [];
+        for (const p of data){
+          const x = (p && p.x != null) ? p.x : NaN;
+          const y = (p && p.y != null) ? p.y : NaN;
+          const r = (p && p.r != null) ? p.r : 4;
+          if (!isFinite(x) || !isFinite(y)) continue;
+          pts.push({x, y, r, _raw:p, _ds:ds});
+        }
+      }
+      const xMin = (this.options.scales && this.options.scales.x && this.options.scales.x.min != null) ? this.options.scales.x.min : Math.min(...pts.map(p=>p.x));
+      const xMax = (this.options.scales && this.options.scales.x && this.options.scales.x.max != null) ? this.options.scales.x.max : Math.max(...pts.map(p=>p.x));
+      const yMin = (this.options.scales && this.options.scales.y && this.options.scales.y.min != null) ? this.options.scales.y.min : Math.min(...pts.map(p=>p.y));
+      const yMax = (this.options.scales && this.options.scales.y && this.options.scales.y.max != null) ? this.options.scales.y.max : Math.max(...pts.map(p=>p.y));
+
+      const xTicksRaw = ticks(xMin, xMax, 6);
+      const yTicksRaw = ticks(yMin, yMax, 5);
+
+      const xToPx = (x)=> plot.x + ( (x - xMin) / (xMax - xMin || 1) ) * plot.w;
+      const yToPx = (y)=> plot.y + plot.h - ( (y - yMin) / (yMax - yMin || 1) ) * plot.h;
+
+      const xTicks = xTicksRaw.map(v=>({value:v, _px:xToPx(v)}));
+      const yTicks = yTicksRaw.map(v=>({value:v, _py:yToPx(v)}));
+
+      const xFmt = (this.options.scales && this.options.scales.x && this.options.scales.x.ticks && this.options.scales.x.ticks.callback) || ((v)=>String(v));
+      const yFmt = (this.options.scales && this.options.scales.y && this.options.scales.y.ticks && this.options.scales.y.ticks.callback) || ((v)=>String(v));
+      this._renderAxes(plot, xTicks, yTicks, xFmt, yFmt);
+
+      // draw points
+      const ctx = this.ctx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(plot.x, plot.y, plot.w, plot.h);
+      ctx.clip();
+
+      for (const p of pts){
+        p._px = xToPx(p.x);
+        p._py = yToPx(p.y);
+      }
+
+      // sort larger behind
+      pts.sort((a,b)=> (b.r||0) - (a.r||0));
+
+      for (const p of pts){
+        const ds = p._ds;
+        const fill = ds.backgroundColor || 'rgba(148,163,184,.85)';
+        const stroke = ds.borderColor || 'rgba(0,0,0,.0)';
+        const alpha = (ds._alpha != null) ? ds._alpha : 0.92;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 1.2 * this._devicePixelRatio;
+        ctx.beginPath();
+        ctx.arc(p._px, p._py, Math.max(1, p.r) * this._devicePixelRatio, 0, Math.PI*2);
+        ctx.fill();
+        if (stroke && stroke !== 'rgba(0,0,0,.0)') ctx.stroke();
+      }
+      ctx.restore();
+
+      // store geometry for tooltip hit-testing
+      this._lastGeom = { plot, points: pts };
+    }
+
+    _renderBar(plot){
+      const ctx = this.ctx;
+      const datasets = this.data.datasets || [];
+      const labels = (this.data.labels || []).map(String);
+      const ds = datasets[0] || { data: [] };
+      const data = (ds.data || []).map(v=> Number(v));
+
+      const yMin = 0;
+      const yMax = Math.max(1, ...data.filter(v=>isFinite(v)));
+      const yTicksRaw = ticks(yMin, yMax, 5);
+
+      const xMin = 0;
+      const xMax = Math.max(1, labels.length);
+
+      const xToPx = (i)=> plot.x + (i / (xMax - xMin || 1)) * plot.w;
+      const yToPx = (y)=> plot.y + plot.h - ( (y - yMin) / (yMax - yMin || 1) ) * plot.h;
+
+      // x ticks at centers (few)
+      const maxXTicks = 6;
+      const step = Math.max(1, Math.ceil(labels.length / maxXTicks));
+      const xTicks = [];
+      for (let i=0; i<labels.length; i+=step){
+        xTicks.push({ value:i+0.5, _px: xToPx(i+0.5), _label: labels[i] });
+      }
+      const yTicks = yTicksRaw.map(v=>({value:v, _py:yToPx(v)}));
+
+      const xFmt = ()=>''; // labels are rendered separately to avoid clutter
+      const yFmt = (this.options.scales && this.options.scales.y && this.options.scales.y.ticks && this.options.scales.y.ticks.callback) || ((v)=>String(v));
+      this._renderAxes(plot, xTicks, yTicks, xFmt, yFmt);
+
+      // bars
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(plot.x, plot.y, plot.w, plot.h);
+      ctx.clip();
+
+      const barW = plot.w / Math.max(1, labels.length);
+      const fill = ds.backgroundColor || 'rgba(106,169,255,.85)';
+      ctx.fillStyle = fill;
+      ctx.globalAlpha = 0.92;
+      for (let i=0; i<labels.length; i++){
+        const v = isFinite(data[i]) ? data[i] : 0;
+        const x0 = plot.x + i*barW;
+        const y0 = yToPx(v);
+        const hh = (plot.y + plot.h) - y0;
+        ctx.fillRect(x0 + barW*0.12, y0, barW*0.76, hh);
+      }
+      ctx.restore();
+
+      // x labels (sparse)
+      const fontPx = Math.max(10, Math.floor(10 * this._devicePixelRatio));
+      ctx.font = `${fontPx}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+      ctx.fillStyle = 'rgba(157,176,194,.88)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (const t of xTicks){
+        const idx = Math.max(0, Math.min(labels.length-1, Math.floor(t.value)));
+        ctx.fillText(labels[idx], t._px, plot.y + plot.h + 10*this._devicePixelRatio);
+      }
+      this._lastGeom = { plot, points: [] };
+    }
+  }
+
+  // tooltip helper: Chart.getElementsAtEventForMode replacement used by app
+  Chart.prototype._hitTest = function(clientX, clientY){
+    const geom = this._lastGeom;
+    if (!geom || !geom.points) return null;
+    const rect = this.canvas.getBoundingClientRect();
+    const dpr = this._devicePixelRatio || 1;
+    const x = (clientX - rect.left) * dpr;
+    const y = (clientY - rect.top) * dpr;
+    let best = null;
+    let bestD = Infinity;
+    for (const p of geom.points){
+      const r = Math.max(2, p.r) * dpr;
+      const dx = x - p._px;
+      const dy = y - p._py;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d <= r + 2*dpr && d < bestD){ bestD = d; best = p; }
+    }
+    return best;
+  };
+
+  // expose
+  window.Chart = Chart;
+  window.__miniChartUtils = { fmtTime, quantile };
+})();
+</script>
+
+<script>
+(function(){
+  const $ = (id)=>document.getElementById(id);
+
+  const state = {
+    actions: [],
+    gates: { requests: [], approvals: [] },
+    filtered: [],
+    timelineChart: null,
+    histChart: null,
+  };
+
+  const tierToY = (tier)=>{
+    const t = String(tier||'').trim().toUpperCase();
+    if (t === 'LOW') return 1;
+    if (t === 'MED' || t === 'MEDIUM') return 2;
+    if (t === 'HIGH') return 3;
+    return NaN;
+  };
+  const yToTierLabel = (y)=>{
+    const v = Math.round(Number(y));
+    if (v === 1) return 'LOW';
+    if (v === 2) return 'MED';
+    if (v === 3) return 'HIGH';
+    return '';
+  };
+
+  function setStatus(msg){
+    $('loadStatus').textContent = msg;
+    $('loadPill').style.borderColor = msg.includes('error') ? 'rgba(251,113,133,.75)' : 'rgba(33,48,67,.95)';
+  }
+
+  function parseOutcome(raw){
+    const o = String(raw||'').trim().toLowerCase();
+    if (!o) return 'other';
+    if (['ok','success','succeeded','pass','passed','true','1'].includes(o)) return 'success';
+    if (['fail','failed','error','false','0'].includes(o)) return 'fail';
+    if (o.includes('gate') || o.includes('gated') || o.includes('approve') || o.includes('approval')) return 'gated';
+    return o === 'other' ? 'other' : (['success','fail','gated'].includes(o) ? o : 'other');
+  }
+
+  function parseCost(v){
+    if (v == null) return null;
+    const s = String(v).trim();
+    if (!s) return null;
+    const n = Number(s.replace(/[^0-9.+-eE]/g,''));
+    return isFinite(n) ? n : null;
+  }
+
+  function parseDuration(v){
+    if (v == null) return null;
+    const s = String(v).trim();
+    if (!s) return null;
+    const n = Number(s.replace(/[^0-9.+-eE]/g,''));
+    return isFinite(n) ? n : null;
+  }
+
+  function parseTimestamp(s){
+    const raw = String(s||'').trim();
+    if (!raw) return null;
+    const cleaned = raw.replace(/^\[|\]$/g,'').trim();
+    const ms = Date.parse(cleaned);
+    if (isFinite(ms)) return new Date(ms);
+    // try epoch
+    const n = Number(cleaned);
+    if (isFinite(n)){
+      const ms2 = (n > 1e12) ? n : n*1000;
+      const d = new Date(ms2);
+      return isFinite(d.getTime()) ? d : null;
+    }
+    return null;
+  }
+
+  function parseActionsLog(text){
+    const lines = String(text||'').split(/\r?\n/);
+    const out = [];
+    for (let i=0; i<lines.length; i++){
+      const line = lines[i].trim();
+      if (!line) continue;
+      if (line.startsWith('#')) continue;
+      const parts = line.split('|').map(p=>p.trim());
+      if (parts.length < 3) continue;
+      // sample: [timestamp] | [tier] | [action] | [file] | [description] | [outcome] | [duration_ms] | [cost]
+      const ts = parseTimestamp(parts[0]);
+      const tier = (parts[1]||'').replace(/^\[|\]$/g,'').trim().toUpperCase();
+      const action = (parts[2]||'').replace(/^\[|\]$/g,'').trim();
+      const file = (parts[3]||'').replace(/^\[|\]$/g,'').trim();
+      const description = (parts[4]||'').replace(/^\[|\]$/g,'').trim();
+      const outcomeRaw = (parts[5]||'').replace(/^\[|\]$/g,'').trim();
+      const duration_ms = parseDuration((parts[6]||'').replace(/^\[|\]$/g,''));
+      const cost = parseCost((parts[7]||'').replace(/^\[|\]$/g,''));
+
+      const y = tierToY(tier);
+      if (!ts || !isFinite(y)) continue;
+
+      out.push({
+        ts,
+        ts_ms: ts.getTime(),
+        tier,
+        tier_y: y,
+        action,
+        file,
+        description,
+        outcome: parseOutcome(outcomeRaw),
+        outcomeRaw,
+        duration_ms,
+        cost,
+        raw: line
+      });
+    }
+    return out;
+  }
+
+  function parseGateJson(obj, fallbackTs){
+    if (!obj || typeof obj !== 'object') return null;
+    const hash = String(obj.hash || obj.sha256 || obj.HASH || obj.id || '').trim();
+    const ts = parseTimestamp(obj.timestamp || obj.time || obj.ts || obj.datetime || '') || (fallbackTs ? new Date(fallbackTs) : null);
+    if (!hash || !ts) return null;
+    return { hash, ts, ts_ms: ts.getTime(), raw: obj };
+  }
+
+  function parseGatesFromFiles(files){
+    const requests = [];
+    const approvals = [];
+    const reads = [];
+
+    for (const f of files){
+      const name = (f.webkitRelativePath || f.name || '').toLowerCase();
+      if (!name.endsWith('.json')) continue;
+      reads.push(new Promise((resolve)=>{
+        const r = new FileReader();
+        r.onload = ()=>{
+          try{
+            const obj = JSON.parse(String(r.result||''));
+            const rec = parseGateJson(obj, f.lastModified);
+            if (rec){
+              if (name.includes('approval-')) approvals.push(rec);
+              else if (name.includes('request-')) requests.push(rec);
+              else {
+                // infer by presence of fields
+                if (String(obj.type||'').toLowerCase().includes('approval') || String(obj.status||'').toLowerCase().includes('approve')) approvals.push(rec);
+                else requests.push(rec);
+              }
+            }
+          } catch(_e){}
+          resolve();
+        };
+        r.onerror = ()=>resolve();
+        r.readAsText(f);
+      }));
+    }
+
+    return Promise.all(reads).then(()=>({requests, approvals}));
+  }
+
+  async function fetchText(path){
+    const res = await fetch(path, {cache:'no-store'});
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
+    return await res.text();
+  }
+
+  async function fetchJson(path){
+    const res = await fetch(path, {cache:'no-store'});
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
+    return await res.json();
+  }
+
+  async function loadDefaultPaths(){
+    // This tries the described default locations. If your environment doesn't allow directory listing,
+    // provide a manifest file in gates/manifest.json (array of filenames), or use the folder picker.
+    setStatus('loading default paths…');
+    const actionsText = await fetchText('actions.log');
+    const actions = parseActionsLog(actionsText);
+
+    let gates = {requests:[], approvals:[]};
+    try{
+      const manifest = await fetchJson('gates/manifest.json');
+      if (Array.isArray(manifest)){
+        const reqs = [];
+        const appr = [];
+        for (const fn of manifest){
+          try{
+            const obj = await fetchJson('gates/' + String(fn));
+            const rec = parseGateJson(obj, null);
+            if (!rec) continue;
+            const low = String(fn).toLowerCase();
+            if (low.includes('approval-')) appr.push(rec);
+            else if (low.includes('request-')) reqs.push(rec);
+            else reqs.push(rec);
+          } catch(_e){}
+        }
+        gates = {requests:reqs, approvals:appr};
+      }
+    } catch(_e){
+      // ignore if no manifest
+    }
+
+    state.actions = actions;
+    state.gates = gates;
+    setStatus('loaded');
+    seedDateRange();
+    applyAndRender();
+  }
+
+  function seedDateRange(){
+    const a = state.actions;
+    if (!a.length) return;
+    const min = Math.min(...a.map(x=>x.ts_ms));
+    const max = Math.max(...a.map(x=>x.ts_ms));
+    const pad = Math.max(60*1000, Math.floor((max-min) * 0.02));
+    const start = new Date(min - pad);
+    const end = new Date(max + pad);
+    $('dtStart').value = toLocalInputValue(start);
+    $('dtEnd').value = toLocalInputValue(end);
+  }
+
+  function toLocalInputValue(d){
+    const pad = (n)=>String(n).padStart(2,'0');
+    const yy = d.getFullYear();
+    const mm = pad(d.getMonth()+1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    return `${yy}-${mm}-${dd}T${hh}:${mi}`;
+  }
+
+  function fromLocalInputValue(s){
+    const v = String(s||'').trim();
+    if (!v) return null;
+    const ms = Date.parse(v);
+    return isFinite(ms) ? ms : null;
+  }
+
+  function getFilters(){
+    const tiers = new Set();
+    if ($('tierLOW').checked) tiers.add('LOW');
+    if ($('tierMED').checked) tiers.add('MED');
+    if ($('tierHIGH').checked) tiers.add('HIGH');
+    const start = fromLocalInputValue($('dtStart').value);
+    const end = fromLocalInputValue($('dtEnd').value);
+    const outcome = $('outcome').value;
+    const q = $('q').value.trim().toLowerCase();
+    const bubbleSize = $('bubbleSize').value;
+    const limit = Number($('tableLimit').value) || 200;
+    return {tiers, start, end, outcome, q, bubbleSize, limit};
+  }
+
+  function applyFilters(){
+    const f = getFilters();
+    const out = [];
+    for (const a of state.actions){
+      if (!f.tiers.has(a.tier === 'MEDIUM' ? 'MED' : a.tier)) continue;
+      if (f.start != null && a.ts_ms < f.start) continue;
+      if (f.end != null && a.ts_ms > f.end) continue;
+      if (f.outcome !== 'all' && a.outcome !== f.outcome) continue;
+      if (f.q){
+        const hay = `${a.action} ${a.file} ${a.description} ${a.outcomeRaw} ${a.raw}`.toLowerCase();
+        if (!hay.includes(f.q)) continue;
+      }
+      out.push(a);
+    }
+    out.sort((x,y)=>y.ts_ms - x.ts_ms);
+    state.filtered = out;
+    $('totalCount').textContent = String(state.actions.length);
+    $('filteredCount').textContent = String(out.length);
+  }
+
+  function bubbleRadius(value, values){
+    const v = (value == null || !isFinite(value)) ? 0 : Number(value);
+    const arr = values.filter(x=>x != null && isFinite(x)).map(Number);
+    if (!arr.length) return 5;
+    const q50 = window.__miniChartUtils.quantile(arr, 0.50);
+    const q95 = window.__miniChartUtils.quantile(arr, 0.95);
+    const minR = 4;
+    const maxR = 18;
+    const lo = isFinite(q50) ? q50 : Math.min(...arr);
+    const hi = isFinite(q95) ? q95 : Math.max(...arr);
+    const t = (v - lo) / ((hi - lo) || 1);
+    return minR + clamp(t, 0, 1) * (maxR - minR);
+  }
+
+  function buildTimelineDatasets(){
+    const f = getFilters();
+    const sizeKey = f.bubbleSize;
+
+    const values = state.filtered.map(a => sizeKey === 'cost' ? a.cost : a.duration_ms);
+
+    const colorOf = (outcome)=>{
+      if (outcome === 'success') return 'rgba(52,211,153,.90)';
+      if (outcome === 'fail') return 'rgba(251,113,133,.92)';
+      if (outcome === 'gated') return 'rgba(96,165,250,.92)';
+      return 'rgba(148,163,184,.85)';
+    };
+
+    const ds = {
+      label: 'decisions',
+      backgroundColor: 'rgba(148,163,184,.85)',
+      borderColor: 'rgba(0,0,0,0)',
+      _alpha: 0.92,
+      data: state.filtered.map(a=>({
+        x: a.ts_ms,
+        y: a.tier_y,
+        r: bubbleRadius(sizeKey === 'cost' ? a.cost : a.duration_ms, values),
+        _meta: a
+      })),
+      _pointColor: (p)=> colorOf(p._meta.outcome)
+    };
+
+    // Our mini engine uses ds.backgroundColor as constant; to color per-point, we split into datasets.
+    const byOutcome = {success:[], fail:[], gated:[], other:[]};
+    for (const a of state.filtered){
+      const key = a.outcome;
+      const k = (key === 'success' || key === 'fail' || key === 'gated') ? key : 'other';
+      byOutcome[k].push({
+        x: a.ts_ms,
+        y: a.tier_y,
+        r: bubbleRadius(sizeKey === 'cost' ? a.cost : a.duration_ms, values),
+        _meta: a
+      });
+    }
+
+    const datasets = [
+      { label:'success', backgroundColor: colorOf('success'), data: byOutcome.success, _alpha: 0.92 },
+      { label:'fail', backgroundColor: colorOf('fail'), data: byOutcome.fail, _alpha: 0.92 },
+      { label:'gated', backgroundColor: colorOf('gated'), data: byOutcome.gated, _alpha: 0.92 },
+      { label:'other', backgroundColor: colorOf('other'), data: byOutcome.other, _alpha: 0.70 },
+    ];
+
+    // Gate approval events as markers (optional): show on y=0.6 baseline
+    const gateApprovals = (state.gates.approvals||[]).map(g=>({
+      x: g.ts_ms,
+      y: 0.6,
+      r: 7,
+      _meta: { type:'gate_approval', hash:g.hash, ts_ms:g.ts_ms }
+    }));
+    if (gateApprovals.length){
+      datasets.unshift({ label:'gate approvals', backgroundColor:'rgba(96,165,250,.92)', data: gateApprovals, _alpha:0.85 });
+    }
+
+    return datasets;
+  }
+
+  function renderTimeline(){
+    const canvas = $('timeline');
+    const start = fromLocalInputValue($('dtStart').value);
+    const end = fromLocalInputValue($('dtEnd').value);
+
+    const options = {
+      layout:{ padding:{left: 62, right: 18, top: 16, bottom: 52} },
+      plugins:{ _bg:'rgba(10,16,24,.35)' },
+      scales:{
+        _gridColor:'rgba(33,48,67,.55)',
+        _axisColor:'rgba(157,176,194,.9)',
+        _textColor:'rgba(157,176,194,.88)',
+        x:{
+          title:{ text:'time' },
+          min: (start != null ? start : null),
+          max: (end != null ? end : null),
+          ticks:{
+            callback:(v)=>{
+              // v is ms timestamp
+              return window.__miniChartUtils.fmtTime(v).slice(5); // MM-DD HH:MM
+            }
+          }
+        },
+        y:{
+          title:{ text:'risk tier' },
+          min: 0.0,
+          max: 3.4,
+          ticks:{ callback:(v)=>{
+            if (v < 0.8) return 'GATE';
+            return yToTierLabel(v);
+          }}
+        }
+      }
+    };
+
+    const data = { datasets: buildTimelineDatasets() };
+
+    if (state.timelineChart) state.timelineChart.destroy();
+    state.timelineChart = new Chart(canvas.getContext('2d'), { type:'bubble', data, options });
+
+    bindTooltip(state.timelineChart);
+  }
+
+  function bindTooltip(chart){
+    const tooltip = $('tooltip');
+    const canvas = chart.canvas;
+
+    const show = (html, x, y)=>{
+      tooltip.innerHTML = html;
+      tooltip.style.display = 'block';
+      const rect = canvas.getBoundingClientRect();
+      const tw = tooltip.offsetWidth;
+      const th = tooltip.offsetHeight;
+      const px = clamp(x - rect.left + 14, 10, rect.width - tw - 10);
+      const py = clamp(y - rect.top + 14, 10, rect.height - th - 10);
+      tooltip.style.left = `${px}px`;
+      tooltip.style.top = `${py}px`;
+    };
+    const hide = ()=>{ tooltip.style.display='none'; };
+
+    const onMove = (ev)=>{
+      const hit = chart._hitTest(ev.clientX, ev.clientY);
+      if (!hit){ hide(); return; }
+      const meta = hit._raw && hit._raw._meta;
+      if (!meta){ hide(); return; }
+
+      if (meta.type === 'gate_approval'){
+        show(
+          `<div class="t">gate approval</div>`+
+          `<div><span class="k">timestamp:</span> <span class="v mono">${window.__miniChartUtils.fmtTime(meta.ts_ms)}</span></div>`+
+          `<div><span class="k">hash:</span> <span class="v mono">${escapeHtml(meta.hash).slice(0,32)}…</span></div>`,
+          ev.clientX, ev.clientY
+        );
+        return;
+      }
+
+      const sizeKey = $('bubbleSize').value;
+      const sizeVal = (sizeKey === 'cost') ? meta.cost : meta.duration_ms;
+      const sizeLbl = (sizeKey === 'cost') ? `cost` : `duration_ms`;
+
+      show(
+        `<div class="t">${escapeHtml(meta.tier)} • ${escapeHtml(meta.outcome)}</div>`+
+        `<div><span class="k">timestamp:</span> <span class="v mono">${window.__miniChartUtils.fmtTime(meta.ts_ms)}</span></div>`+
+        `<div><span class="k">action:</span> <span class="v">${escapeHtml(meta.action||'')}</span></div>`+
+        `<div><span class="k">file:</span> <span class="v mono">${escapeHtml(meta.file||'')}</span></div>`+
+        `<div><span class="k">desc:</span> <span class="v">${escapeHtml(meta.description||'')}</span></div>`+
+        `<div><span class="k">${sizeLbl}:</span> <span class="v mono">${sizeVal == null ? '—' : escapeHtml(String(sizeVal))}</span></div>`,
+        ev.clientX, ev.clientY
+      );
+    };
+
+    canvas.onmousemove = onMove;
+    canvas.onmouseleave = ()=>hide();
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c)=>({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[c]));
+  }
+
+  function renderTable(){
+    const f = getFilters();
+    const rows = state.filtered.slice(0, f.limit);
+    const tb = $('tbody');
+    tb.innerHTML = '';
+    const sizeKey = f.bubbleSize;
+
+    for (const a of rows){
+      const tr = document.createElement('tr');
+      const ts = window.__miniChartUtils.fmtTime(a.ts_ms);
+      const tierBadge = a.tier === 'LOW' ? 'bLow' : (a.tier === 'MED' || a.tier === 'MEDIUM') ? 'bMed' : 'bHigh';
+      const outBadge = a.outcome === 'success' ? 'bOk' : a.outcome === 'fail' ? 'bFail' : a.outcome === 'gated' ? 'bGate' : '';
+      const sizeVal = (sizeKey === 'cost') ? a.cost : a.duration_ms;
+      const sizeTxt = sizeVal == null ? '—' : String(sizeVal);
+      const sizeLbl = sizeKey === 'cost' ? 'cost' : 'ms';
+
+      tr.innerHTML = `
+        <td class="mono">${escapeHtml(ts)}</td>
+        <td><span class="badge ${tierBadge}">${escapeHtml(a.tier === 'MEDIUM' ? 'MED' : a.tier)}</span></td>
+        <td><span class="badge ${outBadge}">${escapeHtml(a.outcome)}</span></td>
+        <td class="mono">${escapeHtml(sizeTxt)} <span class="muted">${escapeHtml(sizeLbl)}</span></td>
+        <td>
+          <div class="mono" style="color:rgba(230,237,243,.95)">${escapeHtml(a.action||'')}</div>
+          <div class="mono" style="color:rgba(157,176,194,.95)">${escapeHtml(a.file||'')}</div>
+          <div style="color:rgba(157,176,194,.92)">${escapeHtml(a.description||'')}</div>
+        </td>
+      `;
+      tb.appendChild(tr);
+    }
+  }
+
+  function fmtLatency(ms){
+    if (ms == null || !isFinite(ms)) return '—';
+    const m = ms / 60000;
+    const h = ms / 3600000;
+    if (h >= 2) return `${h.toFixed(h < 10 ? 2 : 1)} hr`;
+    return `${m.toFixed(m < 10 ? 1 : 0)} min`;
+  }
+
+  function computeGateApprovalLatency(requests, approvals, startMs, endMs){
+    const apprMin = new Map();
+    for (const a of (approvals||[])){
+      if (!a || !a.hash || !isFinite(a.ts_ms)) continue;
+      const prev = apprMin.get(a.hash);
+      if (prev == null || a.ts_ms < prev) apprMin.set(a.hash, a.ts_ms);
+    }
+
+    const deltas = [];
+    let reqInRange = 0;
+    let matched = 0;
+    let missing = 0;
+    let negative = 0;
+
+    for (const r of (requests||[])){
+      if (!r || !r.hash || !isFinite(r.ts_ms)) continue;
+      if (startMs != null && r.ts_ms < startMs) continue;
+      if (endMs != null && r.ts_ms > endMs) continue;
+      reqInRange++;
+      const at = apprMin.get(r.hash);
+      if (at == null){
+        missing++;
+        continue;
+      }
+      const d = at - r.ts_ms;
+      if (!isFinite(d) || d < 0){
+        negative++;
+        continue;
+      }
+      matched++;
+      deltas.push(d);
+    }
+
+    return { deltas, reqInRange, matched, missing, negative };
+  }
+
+  function pearsonCorrelation(xs, ys){
+    if (xs.length !== ys.length || xs.length < 2) return null;
+    const n = xs.length;
+    let sx=0, sy=0, sxx=0, syy=0, sxy=0;
+    for (let i=0;i<n;i++){
+      const x=xs[i], y=ys[i];
+      sx+=x; sy+=y; sxx+=x*x; syy+=y*y; sxy+=x*y;
+    }
+    const cov = (sxy - (sx*sy)/n);
+    const vx = (sxx - (sx*sx)/n);
+    const vy = (syy - (sy*sy)/n);
+    const denom = Math.sqrt(vx*vy);
+    if (!isFinite(denom) || denom === 0) return null;
+    return cov / denom;
+  }
+
+  function renderMetrics(){
+    const data = state.filtered;
+    if (!data.length){
+      $('kpiVelocity').textContent = '—';
+      $('kpiVelocitySub').textContent = 'No data.';
+      $('kpiGate').textContent = '—';
+      $('kpiGateSub').textContent = '—';
+      $('kpiGateLatency').textContent = '—';
+      $('kpiGateLatencySub').textContent = '—';
+      $('kpiCorr').textContent = '—';
+      $('kpiCorrSub').textContent = '—';
+      $('kpiCost').textContent = '—';
+      $('kpiCostSub').textContent = '—';
+      renderCostHistogram([]);
+      return;
+    }
+
+    // velocity (per day) overall and by tier
+    const start = Math.min(...data.map(d=>d.ts_ms));
+    const end = Math.max(...data.map(d=>d.ts_ms));
+    const days = Math.max(1/24, (end - start) / (24*3600*1000));
+    const perDay = data.length / days;
+
+    const byTier = {LOW:0, MED:0, HIGH:0};
+    for (const a of data){
+      const t = (a.tier === 'MEDIUM') ? 'MED' : a.tier;
+      if (byTier[t] != null) byTier[t]++;
+    }
+    const velTier = {
+      LOW: byTier.LOW / days,
+      MED: byTier.MED / days,
+      HIGH: byTier.HIGH / days,
+    };
+
+    $('kpiVelocity').textContent = `${perDay.toFixed(2)} decisions/day`;
+    $('kpiVelocitySub').textContent = `LOW ${velTier.LOW.toFixed(2)} • MED ${velTier.MED.toFixed(2)} • HIGH ${velTier.HIGH.toFixed(2)} (range ${days.toFixed(2)} days)`;
+
+    // gate utilization
+    const gateReq = (state.gates.requests||[]).length;
+    const gateAppr = (state.gates.approvals||[]).length;
+    const gatedActions = data.filter(d=>d.outcome==='gated').length;
+    let gateRate, gateSub;
+    if (gateReq > 0){
+      gateRate = gateAppr / gateReq;
+      gateSub = `${gateAppr} approvals / ${gateReq} requests (plus ${gatedActions} gated actions in filter)`;
+    } else {
+      gateRate = gatedActions / Math.max(1, data.length);
+      gateSub = `No gate manifest loaded; using gated outcomes: ${gatedActions} / ${data.length}`;
+    }
+    $('kpiGate').textContent = `${(gateRate*100).toFixed(1)}%`;
+    $('kpiGateSub').textContent = gateSub;
+
+    // gate approval latency (request -> approval), matched by hash
+    const f = getFilters();
+    const lat = computeGateApprovalLatency(state.gates.requests||[], state.gates.approvals||[], f.start, f.end);
+    if (!lat.deltas.length){
+      $('kpiGateLatency').textContent = '—';
+      if (!lat.reqInRange && (state.gates.requests||[]).length){
+        $('kpiGateLatencySub').textContent = `No gate requests fall inside the current date filter.`;
+      } else if ((state.gates.requests||[]).length || (state.gates.approvals||[]).length){
+        $('kpiGateLatencySub').textContent = `No request/approval pairs found (matched ${lat.matched}/${lat.reqInRange}; missing approvals ${lat.missing}).`;
+      } else {
+        $('kpiGateLatencySub').textContent = 'Load gate request/approval files to compute latency.';
+      }
+    } else {
+      const ds = lat.deltas;
+      const min = Math.min(...ds);
+      const max = Math.max(...ds);
+      const mean = ds.reduce((a,b)=>a+b,0) / ds.length;
+      const p50 = window.__miniChartUtils.quantile(ds, 0.5);
+      const p95 = window.__miniChartUtils.quantile(ds, 0.95);
+      $('kpiGateLatency').textContent = `avg ${fmtLatency(mean)}`;
+      $('kpiGateLatencySub').textContent = `pairs=${ds.length} • min=${fmtLatency(min)} • p50=${fmtLatency(p50)} • p95=${fmtLatency(p95)} • max=${fmtLatency(max)}`;
+    }
+
+    // failure correlation vs tier
+    const xs = data.map(d=>d.tier_y);
+    const ys = data.map(d=> d.outcome === 'fail' ? 1 : 0);
+    const r = pearsonCorrelation(xs, ys);
+
+    const failByTier = {LOW:[0,0], MED:[0,0], HIGH:[0,0]};
+    for (const d of data){
+      const t = (d.tier === 'MEDIUM') ? 'MED' : d.tier;
+      if (!failByTier[t]) continue;
+      failByTier[t][1]++;
+      if (d.outcome === 'fail') failByTier[t][0]++;
+    }
+    const fr = (t)=>{
+      const [f,n]=failByTier[t];
+      if (!n) return '—';
+      return `${(100*f/n).toFixed(1)}% (${f}/${n})`;
+    };
+
+    $('kpiCorr').textContent = (r == null) ? 'n/a' : `r=${r.toFixed(3)}`;
+    $('kpiCorrSub').textContent = `Fail rate: LOW ${fr('LOW')} • MED ${fr('MED')} • HIGH ${fr('HIGH')}`;
+
+    // cost distribution
+    const costs = data.map(d=>d.cost).filter(v=>v != null && isFinite(v));
+    if (!costs.length){
+      $('kpiCost').textContent = '—';
+      $('kpiCostSub').textContent = 'No cost values in filtered set.';
+    } else {
+      const min = Math.min(...costs);
+      const max = Math.max(...costs);
+      const mean = costs.reduce((a,b)=>a+b,0) / costs.length;
+      const p50 = window.__miniChartUtils.quantile(costs, 0.5);
+      const p95 = window.__miniChartUtils.quantile(costs, 0.95);
+      $('kpiCost').textContent = `n=${costs.length} • mean=${mean.toFixed(3)}`;
+      $('kpiCostSub').textContent = `min=${min.toFixed(3)} • p50=${p50.toFixed(3)} • p95=${p95.toFixed(3)} • max=${max.toFixed(3)}`;
+    }
+    renderCostHistogram(costs);
+  }
+
+  function renderCostHistogram(costs){
+    const canvas = $('costHist');
+    if (!costs.length){
+      if (state.histChart) state.histChart.destroy();
+      state.histChart = new Chart(canvas.getContext('2d'), {
+        type:'bar',
+        data:{ labels:['no data'], datasets:[{ data:[0], backgroundColor:'rgba(106,169,255,.6)'}] },
+        options:{
+          layout:{ padding:{left: 56, right: 18, top: 16, bottom: 42} },
+          plugins:{ _bg:'rgba(10,16,24,.35)' },
+          scales:{
+            _gridColor:'rgba(33,48,67,.55)',
+            _axisColor:'rgba(157,176,194,.9)',
+            _textColor:'rgba(157,176,194,.88)',
+            y:{ title:{ text:'count' }, ticks:{ callback:(v)=>String(Math.round(v)) } },
+            x:{ title:{ text:'cost bins' } }
+          }
+        }
+      });
+      return;
+    }
+
+    const bins = 10;
+    const min = Math.min(...costs);
+    const max = Math.max(...costs);
+    const span = (max - min) || 1;
+    const counts = new Array(bins).fill(0);
+    for (const c of costs){
+      const t = (c - min) / span;
+      const idx = Math.min(bins-1, Math.max(0, Math.floor(t * bins)));
+      counts[idx]++;
+    }
+
+    const labels = [];
+    for (let i=0;i<bins;i++){
+      const a = min + (i/bins)*span;
+      const b = min + ((i+1)/bins)*span;
+      labels.push(`${a.toFixed(2)}–${b.toFixed(2)}`);
+    }
+
+    if (state.histChart) state.histChart.destroy();
+    state.histChart = new Chart(canvas.getContext('2d'), {
+      type:'bar',
+      data:{ labels, datasets:[{ data: counts, backgroundColor:'rgba(106,169,255,.85)' }] },
+      options:{
+        layout:{ padding:{left: 56, right: 18, top: 16, bottom: 48} },
+        plugins:{ _bg:'rgba(10,16,24,.35)' },
+        scales:{
+          _gridColor:'rgba(33,48,67,.55)',
+          _axisColor:'rgba(157,176,194,.9)',
+          _textColor:'rgba(157,176,194,.88)',
+          y:{ title:{ text:'count' }, ticks:{ callback:(v)=>String(Math.round(v)) } },
+          x:{ title:{ text:'cost' } }
+        }
+      }
+    });
+  }
+
+  function applyAndRender(){
+    applyFilters();
+    renderTimeline();
+    renderMetrics();
+    renderTable();
+  }
+
+  function clearAll(){
+    state.actions = [];
+    state.gates = {requests:[], approvals:[]};
+    state.filtered = [];
+    if (state.timelineChart) state.timelineChart.destroy();
+    if (state.histChart) state.histChart.destroy();
+    state.timelineChart = null;
+    state.histChart = null;
+    $('tbody').innerHTML = '';
+    $('dtStart').value = '';
+    $('dtEnd').value = '';
+    $('q').value = '';
+    $('outcome').value = 'all';
+    $('bubbleSize').value = 'duration_ms';
+    $('tierLOW').checked = true;
+    $('tierMED').checked = true;
+    $('tierHIGH').checked = true;
+    $('totalCount').textContent = '0';
+    $('filteredCount').textContent = '0';
+    setStatus('idle');
+    renderMetrics();
+  }
+
+  function demoData(){
+    const now = Date.now();
+    const tiers = ['LOW','MED','HIGH'];
+    const outcomes = ['success','success','success','fail','gated'];
+    const demo = [];
+    for (let i=0;i<120;i++){
+      const ts_ms = now - (120 - i) * 30 * 60 * 1000 + (Math.random()*8*60*1000);
+      const tier = tiers[Math.floor(Math.random()*tiers.length)];
+      const tier_y = tierToY(tier);
+      const outcome = outcomes[Math.floor(Math.random()*outcomes.length)];
+      const duration_ms = Math.round(80 + Math.random()*4800 + (tier==='HIGH'? 1400:0));
+      const cost = Number((Math.random()*0.45 + (tier==='HIGH'?0.25:0)).toFixed(3));
+      demo.push({
+        ts: new Date(ts_ms), ts_ms,
+        tier, tier_y,
+        action: ['plan','exec','review','refactor','deploy'][Math.floor(Math.random()*5)],
+        file: ['src/agent.js','policies/gates.json','docs/README.md','ops/runbook.md'][Math.floor(Math.random()*4)],
+        description: 'demo event: synthetic decision record',
+        outcome,
+        outcomeRaw: outcome,
+        duration_ms,
+        cost,
+        raw: `[${new Date(ts_ms).toISOString()}] | ${tier} | demo | file | demo | ${outcome} | ${duration_ms} | ${cost}`
+      });
+    }
+    // demo gates (request + approval pairs)
+    const approvals = [];
+    const requests = [];
+    for (let i=0;i<14;i++){
+      const appr_ms = now - (14-i)*6*3600*1000;
+      const delay_ms = Math.round((5 + Math.random()*480) * 60 * 1000); // 5 min .. 8 hr
+      const req_ms = appr_ms - delay_ms;
+      const hash = `demo${i}`.padEnd(64,'0');
+      requests.push({hash, ts:new Date(req_ms), ts_ms:req_ms, raw:{hash, timestamp:new Date(req_ms).toISOString(), type:'request'}});
+      approvals.push({hash, ts:new Date(appr_ms), ts_ms:appr_ms, raw:{hash, timestamp:new Date(appr_ms).toISOString(), type:'approval'}});
+    }
+    state.actions = demo;
+    state.gates = {requests, approvals};
+    setStatus('demo loaded');
+    seedDateRange();
+    applyAndRender();
+  }
+
+  // UI wiring
+  const rerenderOn = ['dtStart','dtEnd','q','tierLOW','tierMED','tierHIGH','outcome','bubbleSize','tableLimit'];
+  for (const id of rerenderOn){
+    $(id).addEventListener('input', ()=>applyAndRender());
+    $(id).addEventListener('change', ()=>applyAndRender());
+  }
+
+  $('btnLoadDefault').addEventListener('click', async ()=>{
+    try{
+      await loadDefaultPaths();
+    } catch(e){
+      setStatus('error loading default paths');
+      console.error(e);
+      alert('Could not load default paths. If you opened index.html directly, use the file pickers to import actions.log and the gates folder.');
+    }
+  });
+
+  $('btnDemo').addEventListener('click', ()=>demoData());
+  $('btnClear').addEventListener('click', ()=>clearAll());
+
+  $('fileActions').addEventListener('change', async (ev)=>{
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    setStatus('importing actions.log…');
+    const text = await f.text();
+    state.actions = parseActionsLog(text);
+    setStatus(`imported actions.log (${state.actions.length} records)`);
+    seedDateRange();
+    applyAndRender();
+  });
+
+  $('fileGates').addEventListener('change', async (ev)=>{
+    const files = Array.from(ev.target.files || []);
+    if (!files.length){
+      state.gates = {requests:[], approvals:[]};
+      applyAndRender();
+      return;
+    }
+    setStatus('importing gate records…');
+    const gates = await parseGatesFromFiles(files);
+    state.gates = gates;
+    setStatus(`imported gates (${gates.approvals.length} approvals, ${gates.requests.length} requests)`);
+    applyAndRender();
+  });
+
+  // initial render empty
+  clearAll();
+})();
+</script>
+</body>
+</html>
