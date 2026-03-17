@@ -3,53 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mental Health Coverage-to-Access Gap</title>
+    <title>Do Most Insurances Cover Therapy — Key Statistics and Data for 2026</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: #f0f4f0;
             color: #1a2e1a;
-            padding: 40px 20px;
+            padding: 48px 20px;
             min-height: 100vh;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 920px;
             margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .page-title h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a3a2a;
+            line-height: 1.25;
+            margin-bottom: 10px;
+        }
+
+        .page-title p {
+            font-size: 15px;
+            color: #5a7a5a;
+            max-width: 640px;
+            margin: 0 auto;
+            line-height: 1.5;
         }
 
         .table-card {
             background: #fff;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-            margin-bottom: 40px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            margin-bottom: 36px;
         }
 
         .table-header {
             background: #1a3a2a;
-            padding: 28px 32px 20px;
+            padding: 24px 28px 18px;
         }
 
         .table-header h2 {
             color: #fff;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             line-height: 1.3;
         }
 
         .table-header p {
             color: #7dba7d;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 400;
-            margin: 0;
         }
 
         .data-table {
@@ -60,20 +76,13 @@
         .data-table thead th {
             background: #2d5a3d;
             color: #b8e0b8;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            padding: 14px 24px;
+            padding: 13px 20px;
             text-align: left;
-        }
-
-        .data-table thead th:nth-child(2) {
-            text-align: center;
-        }
-
-        .data-table thead th:nth-child(3) {
-            text-align: right;
+            white-space: nowrap;
         }
 
         .data-table tbody tr {
@@ -89,33 +98,36 @@
         }
 
         .data-table tbody td {
-            padding: 18px 24px;
-            font-size: 15px;
-            vertical-align: middle;
-        }
-
-        .data-table tbody td:first-child {
-            color: #1a2e1a;
-            font-weight: 400;
-            max-width: 340px;
+            padding: 15px 20px;
+            font-size: 14px;
+            vertical-align: top;
             line-height: 1.45;
-        }
-
-        .data-table tbody td:nth-child(2) {
-            text-align: center;
-            font-weight: 700;
             color: #1a2e1a;
-            font-size: 16px;
         }
 
-        .data-table tbody td:nth-child(3) {
-            text-align: right;
+        .data-table tbody td.metric {
+            font-weight: 400;
+            max-width: 320px;
+        }
+
+        .data-table tbody td.value {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .data-table tbody td.source {
             color: #5a7a5a;
+            font-size: 12px;
+        }
+
+        .data-table tbody td.comparison {
+            color: #8b4513;
             font-size: 13px;
+            font-weight: 500;
         }
 
         .table-footer {
-            padding: 14px 24px;
+            padding: 12px 20px;
             background: #f4f8f4;
             border-top: 1px solid #e0e8e0;
         }
@@ -126,35 +138,63 @@
             line-height: 1.5;
         }
 
+        .section-label {
+            display: inline-block;
+            background: #2d5a3d;
+            color: #b8e0b8;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .branding {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid #d0dcd0;
+        }
+
+        .branding p {
+            font-size: 13px;
+            color: #6a8a6a;
+        }
+
+        .branding a {
+            color: #2d5a3d;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .branding a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 640px) {
-            body {
-                padding: 20px 12px;
-            }
-
-            .table-header {
-                padding: 20px 18px 16px;
-            }
-
-            .table-header h2 {
-                font-size: 18px;
-            }
-
-            .data-table thead th,
-            .data-table tbody td {
-                padding: 12px 14px;
-                font-size: 13px;
-            }
-
-            .data-table tbody td:nth-child(2) {
-                font-size: 14px;
-            }
+            body { padding: 24px 10px; }
+            .page-title h1 { font-size: 24px; }
+            .table-header { padding: 18px 16px 14px; }
+            .table-header h2 { font-size: 17px; }
+            .data-table thead th { padding: 10px 12px; font-size: 10px; }
+            .data-table tbody td { padding: 12px; font-size: 13px; }
+            .data-table tbody td.value { font-size: 13px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
 
-        <!-- Table 1: Coverage-to-Access Gap -->
+        <div class="page-title">
+            <h1>Do Most Insurances Cover Therapy:<br>Key Statistics and Data for 2026</h1>
+            <p>Federal survey data, commercial claims analysis, and policy impact projections on mental health insurance coverage, access gaps, and reimbursement disparities.</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TABLE 1: Coverage-to-Access Gap             -->
+        <!-- ═══════════════════════════════════════════ -->
         <div class="table-card">
             <div class="table-header">
                 <h2>The Mental Health Coverage-to-Access Gap</h2>
@@ -170,45 +210,241 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Americans with health insurance</td>
-                        <td>91.8%</td>
-                        <td>2024 CDC NHIS</td>
+                        <td class="metric">Americans with health insurance</td>
+                        <td class="value">91.8%</td>
+                        <td class="source">2024 CDC NHIS</td>
                     </tr>
                     <tr>
-                        <td>Adults with AMI who did not receive treatment and had perceived unmet need</td>
-                        <td>21.0% (6.1M)</td>
-                        <td>2024 SAMHSA NSDUH</td>
+                        <td class="metric">Adults with AMI who did not receive treatment and had perceived unmet need</td>
+                        <td class="value">21.0% (6.1M)</td>
+                        <td class="source">2024 SAMHSA NSDUH</td>
                     </tr>
                     <tr>
-                        <td>Adults with AMI overall who had perceived unmet need</td>
-                        <td>9.9%</td>
-                        <td>2024 SAMHSA (computed)</td>
+                        <td class="metric">Adults with AMI overall who had perceived unmet need</td>
+                        <td class="value">9.9%</td>
+                        <td class="source">2024 SAMHSA (computed)</td>
                     </tr>
                     <tr>
-                        <td>Out-of-network rate: psychologist office visits</td>
-                        <td>18.2%</td>
-                        <td>2021 claims (RTI)</td>
+                        <td class="metric">Out-of-network rate: psychologist office visits</td>
+                        <td class="value">18.2%</td>
+                        <td class="source">2021 claims (RTI)</td>
                     </tr>
                     <tr>
-                        <td>Out-of-network rate: medical/surgical specialist office visits</td>
-                        <td>1.7%</td>
-                        <td>2021 claims (RTI)</td>
+                        <td class="metric">Out-of-network rate: medical/surgical specialist office visits</td>
+                        <td class="value">1.7%</td>
+                        <td class="source">2021 claims (RTI)</td>
                     </tr>
                     <tr>
-                        <td>Ratio: psychologist vs. specialist out-of-network use</td>
-                        <td>10.6x higher</td>
-                        <td>2021 claims (RTI)</td>
+                        <td class="metric">Ratio: psychologist vs. specialist out-of-network use</td>
+                        <td class="value">10.6× higher</td>
+                        <td class="source">2021 claims (RTI)</td>
                     </tr>
                     <tr>
-                        <td>CMS Federal Marketplace standard: behavioral health appointment availability</td>
-                        <td>Within 10 business days, ≥90% of time</td>
-                        <td>2024 CMS policy</td>
+                        <td class="metric">CMS Federal Marketplace standard: behavioral health appointment availability</td>
+                        <td class="value">Within 10 business days, ≥90% of time</td>
+                        <td class="source">2024 CMS policy</td>
                     </tr>
                 </tbody>
             </table>
             <div class="table-footer">
-                <p>Sources: CDC NHIS 2024; SAMHSA NSDUH 2024; RTI International 2024 (analyzing 2021 commercial claims); CMS 2024</p>
+                <p>Sources: CDC NHIS 2024; SAMHSA NSDUH 2024; RTI International 2024 (analyzing 2021 claims); CMS 2024</p>
             </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TABLE 2: Federal Policy Impact               -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="table-card">
+            <div class="table-header">
+                <h2>Federal Policy Impact on Mental Health Coverage Access</h2>
+                <p>Budget legislation, premium changes, and reimbursement gaps</p>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Policy Change</th>
+                        <th>Scope of Impact</th>
+                        <th>Financial Effect</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric">2025 Reconciliation Law (H.R. 1)</td>
+                        <td>10 million increase in uninsured</td>
+                        <td>Over $1 trillion reduction in federal health spending</td>
+                        <td class="source">KFF/CBO (2034 endpoint)</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Specific provision: Medicaid work requirements</td>
+                        <td>5.3 million increase in uninsured</td>
+                        <td>Part of total above</td>
+                        <td class="source">KFF/CBO (2034 endpoint)</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">ACA Enhanced Premium Tax Credit Expiration</td>
+                        <td>All subsidized Marketplace enrollees</td>
+                        <td class="value">Avg. premium payments up 114% ($888→$1,904/yr)</td>
+                        <td class="source">KFF 2025/2026</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Medicaid Reimbursement Gap</td>
+                        <td>Medicaid beneficiaries nationally</td>
+                        <td>Medicaid FFS rates for psychiatry averaged 81.0% of Medicare (2022)</td>
+                        <td class="source">Health Affairs 2024</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Gross Marketplace Premium Increases</td>
+                        <td>All Marketplace enrollees</td>
+                        <td class="value">Median proposed increase 18%, avg ~20%</td>
+                        <td class="source">KFF Health System Tracker 2026</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <p>Sources: KFF; Congressional Budget Office; Health Affairs; Peterson-KFF Health System Tracker</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TABLE 3: Reimbursement Gap                   -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="table-card">
+            <div class="table-header">
+                <h2>Commercial In-Network Reimbursement as Percentage of Medicare</h2>
+                <p>2021 commercial insurance claims analysis</p>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Service Category</th>
+                        <th>Avg. Reimbursement (% of Medicare)</th>
+                        <th>Comparison</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric">Medical/surgical specialist physician office visits</td>
+                        <td class="value">135.3%</td>
+                        <td class="comparison">Baseline</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Psychiatrist office visits</td>
+                        <td class="value">108.4%</td>
+                        <td class="comparison">Medical/surgical specialists paid ~24.8% higher</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Psychologist office visits</td>
+                        <td class="value">105.1%</td>
+                        <td class="comparison">Medical/surgical specialists paid ~28.7% higher</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">All medical/surgical clinician office visits</td>
+                        <td class="value">124.8%</td>
+                        <td class="comparison">Baseline</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">All behavioral health clinician office visits</td>
+                        <td class="value">102.5%</td>
+                        <td class="comparison">Medical/surgical clinicians paid ~21.8% higher</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <p>Source: RTI International 2024 (analyzing 2021 commercial insurance claims)</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TABLE 4: Parity Enforcement Landscape        -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="table-card">
+            <div class="table-header">
+                <h2>Mental Health Parity Enforcement Landscape: 2026</h2>
+                <p>Federal retreat and state-level response</p>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Enforcement Level</th>
+                        <th>2026 Status</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric">Federal (2024 MHPAEA Final Rule)</td>
+                        <td>New provisions not enforced pending litigation resolution + 18 months; statutory obligations remain</td>
+                        <td class="source">DOL/HHS/Treasury May 15, 2025</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">New York State</td>
+                        <td>Active enforcement; $2.5M settlement requiring major reforms</td>
+                        <td class="source">NY Attorney General Feb 19, 2026</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Maryland</td>
+                        <td>SB0205 passed Senate (43–0), referred to House Health committee</td>
+                        <td class="source">Maryland General Assembly Feb 2026</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Remaining States</td>
+                        <td>Enforcement varies widely; many relied on federal framework</td>
+                        <td class="source">APA Services 2026</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <p>Sources: DOL/HHS/Treasury 2025; NY Attorney General 2026; Maryland General Assembly 2026; APA Services 2026</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TABLE 5: Market Forces Impact                -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="table-card">
+            <div class="table-header">
+                <h2>Impact of Market Forces on Patient Access</h2>
+                <p>Consolidation, coding, and enforcement dynamics</p>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Factor</th>
+                        <th>Patient Impact</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric">Time-based coding requirements</td>
+                        <td>Documentation burden and audit risk for longer sessions</td>
+                        <td class="source">CMS coding guidance</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Market consolidation trends</td>
+                        <td>Shift toward corporate-affiliated providers in networks</td>
+                        <td class="source">JAMA Psychiatry 2024; APA Services 2026</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Rate negotiation disparities</td>
+                        <td>Independent practitioners face competitive pressure</td>
+                        <td class="source">RTI 2024; APA Services 2026</td>
+                    </tr>
+                    <tr>
+                        <td class="metric">Ghost network enforcement (limited states)</td>
+                        <td>Improved directory accuracy in NY and select enforcement states</td>
+                        <td class="source">NY Attorney General 2026</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <p>Sources: CMS; JAMA Psychiatry 2024; RTI International 2024; APA Services 2026; NY Attorney General 2026</p>
+            </div>
+        </div>
+
+        <div class="branding">
+            <p>Data compiled by <a href="https://manhattanmhc.com" target="_blank">Manhattan Mental Health Counseling</a></p>
         </div>
 
     </div>
