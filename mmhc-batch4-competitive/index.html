@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MMHC Batch 4 — Competitor Intelligence Ads</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; }
+  .header { background: linear-gradient(135deg, #1E4129 0%, #0A2540 100%); padding: 48px 32px; text-align: center; }
+  .header h1 { font-size: 36px; font-weight: 800; color: #A1E681; margin-bottom: 8px; }
+  .header p { font-size: 18px; color: #88b898; }
+  .header .sub { font-size: 14px; color: #6a9a7a; margin-top: 8px; }
+  .stats { display: flex; justify-content: center; gap: 32px; margin-top: 24px; flex-wrap: wrap; }
+  .stat { background: rgba(255,255,255,0.08); padding: 16px 28px; border-radius: 12px; text-align: center; }
+  .stat .num { font-size: 32px; font-weight: 800; color: #A1E681; }
+  .stat .label { font-size: 13px; color: #88b898; margin-top: 4px; }
+  .filters { display: flex; justify-content: center; gap: 10px; padding: 20px; background: #111; position: sticky; top: 0; z-index: 10; flex-wrap: wrap; }
+  .filter { padding: 8px 18px; border-radius: 8px; background: #222; color: #999; cursor: pointer; font-weight: 600; font-size: 13px; border: none; }
+  .filter.active { background: #A1E681; color: #1E4129; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; padding: 32px; }
+  .card { background: #1a1a1a; border-radius: 16px; overflow: hidden; transition: opacity 0.2s; }
+  .card.hidden { display: none; }
+  .card.approved { border: 2px solid #A1E681; }
+  .card.skipped { opacity: 0.4; }
+  .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; cursor: pointer; }
+  .card .meta { padding: 16px; }
+  .card .meta .theme { font-size: 11px; text-transform: uppercase; color: #A1E681; letter-spacing: 1px; margin-bottom: 4px; }
+  .card .meta .cite { font-size: 12px; color: #666; margin-bottom: 10px; font-style: italic; }
+  .card .meta .actions { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .btn { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .btn.approve { background: #1E4129; color: #A1E681; }
+  .btn.approve.active { background: #A1E681; color: #1E4129; }
+  .btn.skip { background: #2a1a1a; color: #e88; }
+  .btn.skip.active { background: #e88; color: #1a1a1a; }
+  .btn.copy-btn { background: #222; color: #aaa; }
+  .btn.dl { background: #222; color: #aaa; }
+  .card .meta .caption { font-size: 13px; color: #ccc; line-height: 1.5; white-space: pre-wrap; max-height: 120px; overflow-y: auto; margin-bottom: 8px; }
+  .card .meta .first-comment { font-size: 12px; color: #999; font-style: italic; }
+  .toolbar { display: flex; justify-content: center; gap: 16px; padding: 16px; background: #111; }
+  .toolbar button { padding: 10px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .dl-all { background: #A1E681; color: #1E4129; }
+  .export-btn { background: #333; color: #ccc; }
+  .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-height: 90vh; max-width: 90vw; border-radius: 12px; }
+  .lightbox-close { position: fixed; top: 20px; right: 20px; color: white; font-size: 32px; cursor: pointer; z-index: 101; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MMHC Batch 4 — Competitor Intelligence Ads</h1>
+  <p>Built from 992 competitor ads analyzed across 8 players</p>
+  <div class="sub">Talkspace proven runners + BetterHelp emotional hooks + NYC differentiation + Research authority</div>
+  <div class="stats">
+    <div class="stat"><div class="num" id="total-count">20</div><div class="label">Total Ads</div></div>
+    <div class="stat"><div class="num" id="approved-count">0</div><div class="label">Approved</div></div>
+    <div class="stat"><div class="num" id="skipped-count">0</div><div class="label">Skipped</div></div>
+  </div>
+</div>
+<div class="filters">
+  <button class="filter active" onclick="filterTheme('all',this)">All (20)</button>
+  <button class="filter" onclick="filterTheme('insurance-anchor',this)">Insurance (3)</button>
+  <button class="filter" onclick="filterTheme('nyc-specific',this)">NYC (2)</button>
+  <button class="filter" onclick="filterTheme('anti-algorithm',this)">Anti-Algorithm (2)</button>
+  <button class="filter" onclick="filterTheme('friction-removal',this)">Friction (2)</button>
+  <button class="filter" onclick="filterTheme('research-authority',this)">Research (2)</button>
+  <button class="filter" onclick="filterTheme('segment',this)">Segments (7)</button>
+  <button class="filter" onclick="filterTheme('social-proof',this)">Social Proof (1)</button>
+  <button class="filter" onclick="filterTheme('retargeting',this)">Retargeting (1)</button>
+</div>
+<div class="toolbar">
+  <button class="dl-all" onclick="downloadApproved()">⬇ Download Approved</button>
+  <button class="export-btn" onclick="exportData()">📊 Export Review Data</button>
+</div>
+<div class="grid">
+<div class="card">
+  <img src="batch-4/b4-ad-001.png" alt="b4-ad-001" loading="lazy">
+  <div class="meta">
+    <div class="theme">insurance-anchor</div>
+    <div class="cite">Source: Talkspace 170-day proven runner adapted for NYC</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-001','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-001','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-001')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-001.png','b4-ad-001')">⬇ Download</button>
+    </div>
+    <div class="caption">Therapy shouldn't be something you put off because of cost. Manhattan Mental Health Counseling accepts most major insurance plans, and many of our clients pay $0 out of pocket.
+
+80+ licensed therapists. Online therapy across New York State. Same-week appointments available.
+
+Stop putting it off. Check your coverage today.
+
+What's been the biggest barrier to starting therapy for you?</div>
+    <div class="first-comment">💬 First comment: Link in bio to check your insurance coverage. Same-week appointments available.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-002.png" alt="b4-ad-002" loading="lazy">
+  <div class="meta">
+    <div class="theme">insurance-anchor</div>
+    <div class="cite">Source: Talkspace $0 copay messaging + BetterHelp friction removal</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-002','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-002','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-002')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-002.png','b4-ad-002')">⬇ Download</button>
+    </div>
+    <div class="caption">Most people think therapy is expensive. Most people are wrong.
+
+At Manhattan Mental Health Counseling, many clients pay nothing out of pocket. Insurance does the work. You just show up.
+
+80+ therapists. Online across New York State. Appointments available this week.
+
+Have you checked what your plan covers lately?</div>
+    <div class="first-comment">💬 First comment: Tap the link in our bio to verify your coverage. Takes less time than ordering coffee.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-003.png" alt="b4-ad-003" loading="lazy">
+  <div class="meta">
+    <div class="theme">nyc-specific</div>
+    <div class="cite">Source: Gap: zero competitors run NYC-specific creative</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-003','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-003','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-003')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-003.png','b4-ad-003')">⬇ Download</button>
+    </div>
+    <div class="caption">The commute. The rent. The pressure to keep up. The loneliness in a city of 8 million people.
+
+New York demands everything and asks if you can give more. You can love this city and still need help carrying the weight of living in it.
+
+Manhattan Mental Health Counseling offers online therapy across New York State. 80+ therapists. Same-week appointments. Insurance accepted.
+
+What's the hardest part of living in New York that nobody talks about?</div>
+    <div class="first-comment">💬 First comment: Same-week appointments available. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-004.png" alt="b4-ad-004" loading="lazy">
+  <div class="meta">
+    <div class="theme">nyc-specific</div>
+    <div class="cite">Source: NYC gap + burnout segment from Talkspace workplace ads</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-004','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-004','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-004')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-004.png','b4-ad-004')">⬇ Download</button>
+    </div>
+    <div class="caption">You came here with a plan. The career, the apartment, the life. But somewhere between the ambition and the reality, something started slipping.
+
+You're not failing. You're running a marathon at sprint speed, and nobody told you where the water stations are.
+
+Manhattan Mental Health Counseling. Online therapy across New York. 80+ therapists. Insurance accepted. Same-week appointments.
+
+When did you last do something that wasn't on a to-do list?</div>
+    <div class="first-comment">💬 First comment: Link in bio for same-week appointments. Your insurance probably covers it.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-005.png" alt="b4-ad-005" loading="lazy">
+  <div class="meta">
+    <div class="theme">segment-burnout</div>
+    <div class="cite">Source: Talkspace workplace segment ads (149-day runners)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-005','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-005','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-005')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-005.png','b4-ad-005')">⬇ Download</button>
+    </div>
+    <div class="caption">Sunday scaries. Monday dread. Tuesday through Friday on autopilot. Weekend recovery that never quite works.
+
+If your job is taking more from you than a paycheck can replace, that's not ambition. That's a signal.
+
+Manhattan Mental Health Counseling. 80+ therapists online across New York State. Evening and weekend slots. Insurance accepted.
+
+What would change if work stress wasn't running your life?</div>
+    <div class="first-comment">💬 First comment: Evening and weekend appointments available. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-006.png" alt="b4-ad-006" loading="lazy">
+  <div class="meta">
+    <div class="theme">segment-relationships</div>
+    <div class="cite">Source: BetterHelp emotional resonance ads + Grow Therapy couples messaging</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-006','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-006','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-006')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-006.png','b4-ad-006')">⬇ Download</button>
+    </div>
+    <div class="caption">Most couples don't break up because they stopped caring. They break up because they stopped communicating under the weight of everything else.
+
+The work. The kids. The money. The exhaustion. Love doesn't disappear. It gets buried.
+
+Manhattan Mental Health Counseling offers couples therapy online across New York State. 80+ therapists. Insurance accepted. Same-week appointments.
+
+What's one thing you wish you could say to your partner right now?</div>
+    <div class="first-comment">💬 First comment: Couples therapy covered by most insurance plans. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-007.png" alt="b4-ad-007" loading="lazy">
+  <div class="meta">
+    <div class="theme">anti-algorithm</div>
+    <div class="cite">Source: Differentiator vs BetterHelp algorithmic matching</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-007','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-007','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-007')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-007.png','b4-ad-007')">⬇ Download</button>
+    </div>
+    <div class="caption">The big platforms match you with whoever's available. A 5-question quiz. A random assignment. Hope for the best.
+
+At Manhattan Mental Health Counseling, matching means something different. 80+ therapists with real specializations. DBT, CBT, EMDR, psychodynamic, couples, trauma. We match you based on what you actually need, not who has an opening.
+
+Your condition isn't generic. Your therapist shouldn't be either.
+
+What matters most to you in a therapist?</div>
+    <div class="first-comment">💬 First comment: Take 2 minutes to tell us what you're looking for. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-008.png" alt="b4-ad-008" loading="lazy">
+  <div class="meta">
+    <div class="theme">anti-algorithm</div>
+    <div class="cite">Source: Modality differentiation (nobody else does this)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-008','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-008','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-008')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-008.png','b4-ad-008')">⬇ Download</button>
+    </div>
+    <div class="caption">A JAMA meta-analysis of 375 trials found that therapy outcomes vary by 4x depending on the match between condition and modality.
+
+PTSD responds differently than depression. Bipolar responds differently than anxiety. One approach does not fit all.
+
+Manhattan Mental Health Counseling offers CBT, DBT, EMDR, psychodynamic, couples therapy, and more. 80+ therapists. Online across New York State. Insurance accepted.
+
+Did you know there are different types of therapy for different conditions?</div>
+    <div class="first-comment">💬 First comment: Link in bio to explore which approach might work best for you.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-009.png" alt="b4-ad-009" loading="lazy">
+  <div class="meta">
+    <div class="theme">friction-removal</div>
+    <div class="cite">Source: BetterHelp core messaging (82-day runners)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-009','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-009','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-009')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-009.png','b4-ad-009')">⬇ Download</button>
+    </div>
+    <div class="caption">You've thought about it. You've almost signed up three times. Something always gets in the way.
+
+Manhattan Mental Health Counseling removes the barriers. Online therapy across New York State. 80+ therapists. Same-week appointments. Insurance accepted.
+
+The only step left is the first one.
+
+What's been holding you back from starting?</div>
+    <div class="first-comment">💬 First comment: Same-week appointments. Insurance accepted. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-010.png" alt="b4-ad-010" loading="lazy">
+  <div class="meta">
+    <div class="theme">friction-removal</div>
+    <div class="cite">Source: BetterHelp 'easy' messaging + Talkspace convenience</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-010','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-010','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-010')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-010.png','b4-ad-010')">⬇ Download</button>
+    </div>
+    <div class="caption">You don't need another article about therapy. You don't need another self-help book. You need someone who listens.
+
+Manhattan Mental Health Counseling. 80+ licensed therapists online across New York State. Same-week appointments. Most insurance plans accepted.
+
+You already know you need this. Let's go.
+
+Tag someone who needs to hear this today.</div>
+    <div class="first-comment">💬 First comment: Link in bio. Same-week appointments available right now.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-011.png" alt="b4-ad-011" loading="lazy">
+  <div class="meta">
+    <div class="theme">research-authority</div>
+    <div class="cite">Source: Unique to MMHC (no competitor cites research)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-011','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-011','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-011')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-011.png','b4-ad-011')">⬇ Download</button>
+    </div>
+    <div class="caption">PTSD has the highest therapy efficacy of any mental health condition. It also has the highest dropout rate: 24%.
+
+The difference between someone who stays and someone who leaves often comes down to one thing: the right therapist.
+
+At Manhattan Mental Health Counseling, our trauma specialists are trained in EMDR, CPT, and prolonged exposure. We don't just assign you a therapist. We match you with someone who specializes in what you're going through.
+
+80+ therapists. Online across New York State. Insurance accepted.</div>
+    <div class="first-comment">💬 First comment: If you've tried therapy before and it didn't work, the therapy might not have been the problem. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-012.png" alt="b4-ad-012" loading="lazy">
+  <div class="meta">
+    <div class="theme">research-authority</div>
+    <div class="cite">Source: Batch 3 research theme + competitive whitespace</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-012','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-012','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-012')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-012.png','b4-ad-012')">⬇ Download</button>
+    </div>
+    <div class="caption">A 2024 JAMA study found that DBT reduces suicide attempts by 68% in people with bipolar disorder. It outperformed CBT significantly for this population.
+
+But most therapy practices only hire for CBT. If you have bipolar disorder and you're only getting CBT, the research suggests you're getting the wrong treatment.
+
+Manhattan Mental Health Counseling offers DBT, CBT, EMDR, psychodynamic, and more. 80+ therapists across 10+ modalities. Online in New York State.
+
+Did you know the type of therapy matters as much as the therapist?</div>
+    <div class="first-comment">💬 First comment: Link in bio to learn which modality might be right for you.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-013.png" alt="b4-ad-013" loading="lazy">
+  <div class="meta">
+    <div class="theme">segment-anxiety</div>
+    <div class="cite">Source: Reddit pain point data + BetterHelp emotional hooks</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-013','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-013','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-013')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-013.png','b4-ad-013')">⬇ Download</button>
+    </div>
+    <div class="caption">The racing thoughts. The tight chest. The constant feeling that something is about to go wrong, even when nothing is.
+
+Anxiety convinces you it's keeping you safe. It's not. It's keeping you stuck.
+
+Manhattan Mental Health Counseling. 80+ therapists who specialize in anxiety treatment. Online across New York State. Insurance accepted. Same-week appointments.
+
+What does your anxiety tell you at 3 AM?</div>
+    <div class="first-comment">💬 First comment: You don't have to white-knuckle your way through this. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-014.png" alt="b4-ad-014" loading="lazy">
+  <div class="meta">
+    <div class="theme">segment-high-functioning</div>
+    <div class="cite">Source: Reddit scrape batch 2 pain points + competitive whitespace</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-014','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-014','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-014')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-014.png','b4-ad-014')">⬇ Download</button>
+    </div>
+    <div class="caption">You hit your deadlines. You show up for everyone. You never miss a commitment.
+
+But behind the performance, something is fraying. The exhaustion you can't explain. The numbness you've normalized. The feeling that you're running on fumes disguised as discipline.
+
+High-functioning doesn't mean you don't need help. It means you've gotten very good at hiding that you do.
+
+Manhattan Mental Health Counseling. 80+ therapists. Online across New York State. Insurance accepted.
+
+What would it feel like to stop performing?</div>
+    <div class="first-comment">💬 First comment: Same-week appointments. Nobody has to know. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-015.png" alt="b4-ad-015" loading="lazy">
+  <div class="meta">
+    <div class="theme">segment-parents</div>
+    <div class="cite">Source: Grow Therapy parent-focused messaging (272 ads)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-015','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-015','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-015')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-015.png','b4-ad-015')">⬇ Download</button>
+    </div>
+    <div class="caption">You schedule everything for everyone else. Doctor's appointments, school events, meal prep, emotional labor that doesn't have a name.
+
+When was the last time you scheduled something for yourself that wasn't productive?
+
+Manhattan Mental Health Counseling offers online therapy designed to fit a parent's schedule. Evening and weekend appointments. 80+ therapists. Insurance accepted across New York State.
+
+What would you do with one hour that was just for you?</div>
+    <div class="first-comment">💬 First comment: Evening and weekend sessions. Because parents don't get business hours off. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-016.png" alt="b4-ad-016" loading="lazy">
+  <div class="meta">
+    <div class="theme">insurance-anchor</div>
+    <div class="cite">Source: Talkspace budget-conscious messaging (170 days proven)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-016','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-016','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-016')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-016.png','b4-ad-016')">⬇ Download</button>
+    </div>
+    <div class="caption">In New York, everything costs more. Your rent. Your food. Your commute. Therapy shouldn't be another financial burden.
+
+Manhattan Mental Health Counseling accepts most major insurance plans. Many of our clients pay nothing out of pocket.
+
+80+ therapists. Online across New York State. Same-week appointments.
+
+Your mental health shouldn't compete with your budget.
+
+Have you checked what your insurance covers for therapy?</div>
+    <div class="first-comment">💬 First comment: Check your coverage in 2 minutes. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-017.png" alt="b4-ad-017" loading="lazy">
+  <div class="meta">
+    <div class="theme">segment-men</div>
+    <div class="cite">Source: Underserved segment (no competitor targets men specifically)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-017','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-017','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-017')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-017.png','b4-ad-017')">⬇ Download</button>
+    </div>
+    <div class="caption">Men account for 75% of suicides. Men use therapy at half the rate of women.
+
+Not because they don't need it. Because nobody told them it was for them too.
+
+You don't need to be in crisis. You don't need a diagnosis. You just need to not carry everything alone.
+
+Manhattan Mental Health Counseling. 80+ therapists. Online across New York State. Private. Confidential. Insurance accepted.
+
+What would it take for you to try one session?</div>
+    <div class="first-comment">💬 First comment: Confidential online sessions. Nobody sees you walk in. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-018.png" alt="b4-ad-018" loading="lazy">
+  <div class="meta">
+    <div class="theme">segment-military</div>
+    <div class="cite">Source: Talkspace TRICARE ads (157-day runner)</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-018','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-018','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-018')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-018.png','b4-ad-018')">⬇ Download</button>
+    </div>
+    <div class="caption">Military life asks a lot. From the service member and from everyone around them.
+
+Manhattan Mental Health Counseling accepts TRICARE and provides online therapy across New York State. Individual, couples, and family therapy with therapists who understand military life.
+
+80+ licensed therapists. Same-week appointments.
+
+What kind of support would make the biggest difference for your family?</div>
+    <div class="first-comment">💬 First comment: TRICARE-covered therapy. Link in bio to get started.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-019.png" alt="b4-ad-019" loading="lazy">
+  <div class="meta">
+    <div class="theme">social-proof</div>
+    <div class="cite">Source: BetterHelp scale messaging adapted for MMHC credibility</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-019','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-019','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-019')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-019.png','b4-ad-019')">⬇ Download</button>
+    </div>
+    <div class="caption">When you have 80+ therapists on one platform, matching isn't a marketing line. It's a real process.
+
+Anxiety. Depression. Trauma. OCD. ADHD. Bipolar. Couples. Family. Grief. Career stress. Perinatal. LGBTQ+ affirming.
+
+Whatever you're going through, there's someone here who specializes in exactly that.
+
+Manhattan Mental Health Counseling. Online across New York State. Same-week appointments. Insurance accepted.
+
+What would the right therapist change for you?</div>
+    <div class="first-comment">💬 First comment: Tell us what you need. We'll match you. Link in bio.</div>
+  </div>
+</div><div class="card">
+  <img src="batch-4/b4-ad-020.png" alt="b4-ad-020" loading="lazy">
+  <div class="meta">
+    <div class="theme">retargeting-nudge</div>
+    <div class="cite">Source: BetterHelp 'easy start' messaging + urgency</div>
+    <div class="actions">
+      <button class="btn approve" onclick="toggleState(this,'b4-ad-020','approved')">✅ Approve</button>
+      <button class="btn skip" onclick="toggleState(this,'b4-ad-020','skipped')">⏭ Skip</button>
+      <button class="btn copy-btn" onclick="copyCaption(this,'b4-ad-020')">📋 Copy Caption</button>
+      <button class="btn dl" onclick="downloadImg('batch-4/b4-ad-020.png','b4-ad-020')">⬇ Download</button>
+    </div>
+    <div class="caption">You've googled therapists. You've read the articles. You've told yourself 'next month.'
+
+Next month is here. And the truth is, there's never a perfect time to start. There's just the moment you decide to stop waiting.
+
+Manhattan Mental Health Counseling. 80+ therapists. Online across New York State. Same-week appointments. Insurance accepted.
+
+This is the sign you've been waiting for.
+
+Tag someone who's been putting this off.</div>
+    <div class="first-comment">💬 First comment: Same-week appointments open right now. Link in bio.</div>
+  </div>
+</div>
+</div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close">&times;</span>
+  <img id="lightbox-img" src="">
+</div>
+<script>
+const captions = {"b4-ad-001": "Therapy shouldn't be something you put off because of cost. Manhattan Mental Health Counseling accepts most major insurance plans, and many of our clients pay $0 out of pocket.\n\n80+ licensed therapists. Online therapy across New York State. Same-week appointments available.\n\nStop putting it off. Check your coverage today.\n\nWhat's been the biggest barrier to starting therapy for you?\\n\\nLink in bio to check your insurance coverage. Same-week appointments available.", "b4-ad-002": "Most people think therapy is expensive. Most people are wrong.\n\nAt Manhattan Mental Health Counseling, many clients pay nothing out of pocket. Insurance does the work. You just show up.\n\n80+ therapists. Online across New York State. Appointments available this week.\n\nHave you checked what your plan covers lately?\\n\\nTap the link in our bio to verify your coverage. Takes less time than ordering coffee.", "b4-ad-003": "The commute. The rent. The pressure to keep up. The loneliness in a city of 8 million people.\n\nNew York demands everything and asks if you can give more. You can love this city and still need help carrying the weight of living in it.\n\nManhattan Mental Health Counseling offers online therapy across New York State. 80+ therapists. Same-week appointments. Insurance accepted.\n\nWhat's the hardest part of living in New York that nobody talks about?\\n\\nSame-week appointments available. Link in bio.", "b4-ad-004": "You came here with a plan. The career, the apartment, the life. But somewhere between the ambition and the reality, something started slipping.\n\nYou're not failing. You're running a marathon at sprint speed, and nobody told you where the water stations are.\n\nManhattan Mental Health Counseling. Online therapy across New York. 80+ therapists. Insurance accepted. Same-week appointments.\n\nWhen did you last do something that wasn't on a to-do list?\\n\\nLink in bio for same-week appointments. Your insurance probably covers it.", "b4-ad-005": "Sunday scaries. Monday dread. Tuesday through Friday on autopilot. Weekend recovery that never quite works.\n\nIf your job is taking more from you than a paycheck can replace, that's not ambition. That's a signal.\n\nManhattan Mental Health Counseling. 80+ therapists online across New York State. Evening and weekend slots. Insurance accepted.\n\nWhat would change if work stress wasn't running your life?\\n\\nEvening and weekend appointments available. Link in bio.", "b4-ad-006": "Most couples don't break up because they stopped caring. They break up because they stopped communicating under the weight of everything else.\n\nThe work. The kids. The money. The exhaustion. Love doesn't disappear. It gets buried.\n\nManhattan Mental Health Counseling offers couples therapy online across New York State. 80+ therapists. Insurance accepted. Same-week appointments.\n\nWhat's one thing you wish you could say to your partner right now?\\n\\nCouples therapy covered by most insurance plans. Link in bio.", "b4-ad-007": "The big platforms match you with whoever's available. A 5-question quiz. A random assignment. Hope for the best.\n\nAt Manhattan Mental Health Counseling, matching means something different. 80+ therapists with real specializations. DBT, CBT, EMDR, psychodynamic, couples, trauma. We match you based on what you actually need, not who has an opening.\n\nYour condition isn't generic. Your therapist shouldn't be either.\n\nWhat matters most to you in a therapist?\\n\\nTake 2 minutes to tell us what you're looking for. Link in bio.", "b4-ad-008": "A JAMA meta-analysis of 375 trials found that therapy outcomes vary by 4x depending on the match between condition and modality.\n\nPTSD responds differently than depression. Bipolar responds differently than anxiety. One approach does not fit all.\n\nManhattan Mental Health Counseling offers CBT, DBT, EMDR, psychodynamic, couples therapy, and more. 80+ therapists. Online across New York State. Insurance accepted.\n\nDid you know there are different types of therapy for different conditions?\\n\\nLink in bio to explore which approach might work best for you.", "b4-ad-009": "You've thought about it. You've almost signed up three times. Something always gets in the way.\n\nManhattan Mental Health Counseling removes the barriers. Online therapy across New York State. 80+ therapists. Same-week appointments. Insurance accepted.\n\nThe only step left is the first one.\n\nWhat's been holding you back from starting?\\n\\nSame-week appointments. Insurance accepted. Link in bio.", "b4-ad-010": "You don't need another article about therapy. You don't need another self-help book. You need someone who listens.\n\nManhattan Mental Health Counseling. 80+ licensed therapists online across New York State. Same-week appointments. Most insurance plans accepted.\n\nYou already know you need this. Let's go.\n\nTag someone who needs to hear this today.\\n\\nLink in bio. Same-week appointments available right now.", "b4-ad-011": "PTSD has the highest therapy efficacy of any mental health condition. It also has the highest dropout rate: 24%.\n\nThe difference between someone who stays and someone who leaves often comes down to one thing: the right therapist.\n\nAt Manhattan Mental Health Counseling, our trauma specialists are trained in EMDR, CPT, and prolonged exposure. We don't just assign you a therapist. We match you with someone who specializes in what you're going through.\n\n80+ therapists. Online across New York State. Insurance accepted.\\n\\nIf you've tried therapy before and it didn't work, the therapy might not have been the problem. Link in bio.", "b4-ad-012": "A 2024 JAMA study found that DBT reduces suicide attempts by 68% in people with bipolar disorder. It outperformed CBT significantly for this population.\n\nBut most therapy practices only hire for CBT. If you have bipolar disorder and you're only getting CBT, the research suggests you're getting the wrong treatment.\n\nManhattan Mental Health Counseling offers DBT, CBT, EMDR, psychodynamic, and more. 80+ therapists across 10+ modalities. Online in New York State.\n\nDid you know the type of therapy matters as much as the therapist?\\n\\nLink in bio to learn which modality might be right for you.", "b4-ad-013": "The racing thoughts. The tight chest. The constant feeling that something is about to go wrong, even when nothing is.\n\nAnxiety convinces you it's keeping you safe. It's not. It's keeping you stuck.\n\nManhattan Mental Health Counseling. 80+ therapists who specialize in anxiety treatment. Online across New York State. Insurance accepted. Same-week appointments.\n\nWhat does your anxiety tell you at 3 AM?\\n\\nYou don't have to white-knuckle your way through this. Link in bio.", "b4-ad-014": "You hit your deadlines. You show up for everyone. You never miss a commitment.\n\nBut behind the performance, something is fraying. The exhaustion you can't explain. The numbness you've normalized. The feeling that you're running on fumes disguised as discipline.\n\nHigh-functioning doesn't mean you don't need help. It means you've gotten very good at hiding that you do.\n\nManhattan Mental Health Counseling. 80+ therapists. Online across New York State. Insurance accepted.\n\nWhat would it feel like to stop performing?\\n\\nSame-week appointments. Nobody has to know. Link in bio.", "b4-ad-015": "You schedule everything for everyone else. Doctor's appointments, school events, meal prep, emotional labor that doesn't have a name.\n\nWhen was the last time you scheduled something for yourself that wasn't productive?\n\nManhattan Mental Health Counseling offers online therapy designed to fit a parent's schedule. Evening and weekend appointments. 80+ therapists. Insurance accepted across New York State.\n\nWhat would you do with one hour that was just for you?\\n\\nEvening and weekend sessions. Because parents don't get business hours off. Link in bio.", "b4-ad-016": "In New York, everything costs more. Your rent. Your food. Your commute. Therapy shouldn't be another financial burden.\n\nManhattan Mental Health Counseling accepts most major insurance plans. Many of our clients pay nothing out of pocket.\n\n80+ therapists. Online across New York State. Same-week appointments.\n\nYour mental health shouldn't compete with your budget.\n\nHave you checked what your insurance covers for therapy?\\n\\nCheck your coverage in 2 minutes. Link in bio.", "b4-ad-017": "Men account for 75% of suicides. Men use therapy at half the rate of women.\n\nNot because they don't need it. Because nobody told them it was for them too.\n\nYou don't need to be in crisis. You don't need a diagnosis. You just need to not carry everything alone.\n\nManhattan Mental Health Counseling. 80+ therapists. Online across New York State. Private. Confidential. Insurance accepted.\n\nWhat would it take for you to try one session?\\n\\nConfidential online sessions. Nobody sees you walk in. Link in bio.", "b4-ad-018": "Military life asks a lot. From the service member and from everyone around them.\n\nManhattan Mental Health Counseling accepts TRICARE and provides online therapy across New York State. Individual, couples, and family therapy with therapists who understand military life.\n\n80+ licensed therapists. Same-week appointments.\n\nWhat kind of support would make the biggest difference for your family?\\n\\nTRICARE-covered therapy. Link in bio to get started.", "b4-ad-019": "When you have 80+ therapists on one platform, matching isn't a marketing line. It's a real process.\n\nAnxiety. Depression. Trauma. OCD. ADHD. Bipolar. Couples. Family. Grief. Career stress. Perinatal. LGBTQ+ affirming.\n\nWhatever you're going through, there's someone here who specializes in exactly that.\n\nManhattan Mental Health Counseling. Online across New York State. Same-week appointments. Insurance accepted.\n\nWhat would the right therapist change for you?\\n\\nTell us what you need. We'll match you. Link in bio.", "b4-ad-020": "You've googled therapists. You've read the articles. You've told yourself 'next month.'\n\nNext month is here. And the truth is, there's never a perfect time to start. There's just the moment you decide to stop waiting.\n\nManhattan Mental Health Counseling. 80+ therapists. Online across New York State. Same-week appointments. Insurance accepted.\n\nThis is the sign you've been waiting for.\n\nTag someone who's been putting this off.\\n\\nSame-week appointments open right now. Link in bio."};
+const themes = {"b4-ad-001": "insurance-anchor", "b4-ad-002": "insurance-anchor", "b4-ad-003": "nyc-specific", "b4-ad-004": "nyc-specific", "b4-ad-005": "segment-burnout", "b4-ad-006": "segment-relationships", "b4-ad-007": "anti-algorithm", "b4-ad-008": "anti-algorithm", "b4-ad-009": "friction-removal", "b4-ad-010": "friction-removal", "b4-ad-011": "research-authority", "b4-ad-012": "research-authority", "b4-ad-013": "segment-anxiety", "b4-ad-014": "segment-high-functioning", "b4-ad-015": "segment-parents", "b4-ad-016": "insurance-anchor", "b4-ad-017": "segment-men", "b4-ad-018": "segment-military", "b4-ad-019": "social-proof", "b4-ad-020": "retargeting-nudge"};
+let state = JSON.parse(localStorage.getItem('b4-state') || '{}');
+
+function save() { localStorage.setItem('b4-state', JSON.stringify(state)); updateCounts(); }
+
+function toggleState(btn, id, s) {
+  if (state[id] === s) { delete state[id]; btn.classList.remove('active'); }
+  else { state[id] = s; btn.classList.add('active'); }
+  const card = btn.closest('.card');
+  card.classList.remove('approved','skipped');
+  if (state[id]) card.classList.add(state[id]);
+  // deactivate sibling
+  const sibling = s === 'approved' ? btn.parentElement.querySelector('.skip') : btn.parentElement.querySelector('.approve');
+  sibling.classList.remove('active');
+  save();
+}
+
+function updateCounts() {
+  const vals = Object.values(state);
+  document.getElementById('approved-count').textContent = vals.filter(v=>v==='approved').length;
+  document.getElementById('skipped-count').textContent = vals.filter(v=>v==='skipped').length;
+}
+
+function copyCaption(btn, id) {
+  navigator.clipboard.writeText(captions[id]).then(() => { btn.textContent = '✅ Copied!'; setTimeout(()=>btn.textContent='📋 Copy Caption', 2000); });
+}
+
+function downloadImg(src, id) {
+  const a = document.createElement('a'); a.href = src; a.download = id + '.png'; a.click();
+}
+
+function downloadApproved() {
+  const approved = Object.entries(state).filter(([k,v])=>v==='approved');
+  approved.forEach(([id]) => { downloadImg('batch-4/'+id+'.png', id); });
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'batch-4-review.json'; a.click();
+}
+
+function filterTheme(t, btn) {
+  document.querySelectorAll('.filter').forEach(f=>f.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.card').forEach(card => {
+    const id = card.querySelector('img').alt;
+    const th = themes[id] || '';
+    if (t === 'all') card.classList.remove('hidden');
+    else if (t === 'segment') card.classList.toggle('hidden', !th.startsWith('segment'));
+    else card.classList.toggle('hidden', !th.includes(t));
+  });
+}
+
+// Lightbox
+document.querySelectorAll('.card img').forEach(img => {
+  img.onclick = (e) => { e.stopPropagation(); document.getElementById('lightbox-img').src = img.src; document.getElementById('lightbox').classList.add('show'); };
+});
+function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+// Restore state on load
+document.addEventListener('DOMContentLoaded', () => {
+  Object.entries(state).forEach(([id, s]) => {
+    const card = document.querySelector(`img[alt="${id}"]`);
+    if (!card) return;
+    const c = card.closest('.card');
+    c.classList.add(s);
+    const btn = s === 'approved' ? c.querySelector('.approve') : c.querySelector('.skip');
+    if (btn) btn.classList.add('active');
+  });
+  updateCounts();
+});
+</script>
+</body>
+</html>
