@@ -1,0 +1,1320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Agent State Tracker — Dashboard</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#111824;
+      --panel2:#0f1620;
+      --border:#1f2a3a;
+      --text:#d7e1ee;
+      --muted:#93a4ba;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+
+      --running:#3b82f6;
+      --failed:#ef4444;
+      --completed:#22c55e;
+      --checkpointed:#eab308;
+
+      --focus: rgba(59,130,246,.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 15% 10%, rgba(59,130,246,.08), transparent 55%),
+        radial-gradient(1000px 700px at 90% 20%, rgba(234,179,8,.06), transparent 55%),
+        radial-gradient(900px 700px at 70% 90%, rgba(34,197,94,.05), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      line-height:1.35;
+    }
+
+    a,button,input,select{color:inherit}
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,15,20,.65);
+      border-bottom:1px solid var(--border);
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:16px;
+    }
+
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width: 240px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+      font-weight:700;
+    }
+    .brand .sub{
+      font-size:12px;
+      color:var(--muted);
+      font-family:var(--mono);
+    }
+
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(17,24,36,.9), rgba(15,22,32,.9));
+      border-radius:12px;
+      padding:10px 12px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      box-shadow: var(--shadow);
+    }
+
+    label{
+      font-size:12px;
+      color:var(--muted);
+      font-family:var(--mono);
+    }
+
+    select{
+      appearance:none;
+      background:rgba(0,0,0,.15);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:13px;
+      font-family:var(--mono);
+      outline:none;
+    }
+    select:focus{box-shadow:0 0 0 4px var(--focus)}
+
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.2);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-family:var(--mono);
+      cursor:pointer;
+      transition: transform .05s ease, background .2s ease, border-color .2s ease;
+    }
+    .btn:hover{background:rgba(255,255,255,.04)}
+    .btn:active{transform: translateY(1px)}
+    .btn:focus{outline:none; box-shadow:0 0 0 4px var(--focus)}
+
+    main .wrap{padding-top:18px}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.35fr .9fr;
+      gap:14px;
+      align-items:start;
+    }
+
+    .card{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(17,24,36,.75), rgba(15,22,32,.75));
+      border-radius:16px;
+      padding:14px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:13px;
+      font-family:var(--mono);
+      letter-spacing:.3px;
+      text-transform:uppercase;
+      color:#b7c5d8;
+    }
+
+    .card .meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+      color:var(--muted);
+      font-size:12px;
+      font-family:var(--mono);
+    }
+
+    .chartBox{
+      position:relative;
+      height:320px;
+      padding:6px;
+      border-radius:12px;
+      background:rgba(0,0,0,.12);
+      border:1px dashed rgba(31,42,58,.9);
+      overflow:hidden;
+    }
+
+    .split{
+      display:grid;
+      grid-template-rows:auto auto;
+      gap:14px;
+    }
+
+    .legend{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      margin-top:10px;
+    }
+    .tag{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.12);
+    }
+    .dot{width:10px;height:10px;border-radius:999px;background:var(--muted)}
+
+    .stateHeader{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .kvs{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .kv{
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.12);
+      border-radius:12px;
+      padding:10px;
+      min-height:62px;
+    }
+    .kv .k{font-family:var(--mono); font-size:12px; color:var(--muted)}
+    .kv .v{margin-top:6px; font-family:var(--mono); font-size:12px; color:var(--text)}
+
+    pre{
+      margin:0;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.18);
+      overflow:auto;
+      max-height:360px;
+      font-size:12px;
+      font-family:var(--mono);
+      color:#cfe0f4;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .checkpoint{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(0,0,0,.12);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .checkpointTop{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .checkpoint .title{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--text);
+    }
+    .checkpoint .desc{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .miniBtn{
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:12px;
+      font-family:var(--mono);
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.2);
+      cursor:pointer;
+    }
+    .miniBtn:focus{outline:none; box-shadow:0 0 0 4px var(--focus)}
+
+    .warn{
+      border:1px solid rgba(239,68,68,.35);
+      background: rgba(239,68,68,.08);
+      border-radius:14px;
+      padding:12px;
+      font-family:var(--mono);
+      color:#ffd7d7;
+      font-size:12px;
+    }
+
+    .footerNote{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:12px;
+      font-family:var(--mono);
+    }
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr;}
+      .chartBox{height:300px}
+      .kvs{grid-template-columns: 1fr;}
+      .brand{min-width:unset}
+      .controls{justify-content:flex-start}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <h1>AI Agent State Tracker</h1>
+          <div class="sub">timeline · state inspection · checkpoints · dependency graph · export</div>
+        </div>
+
+        <div class="controls">
+          <div class="pill" aria-label="Filters">
+            <div style="display:flex; flex-direction:column; gap:6px; min-width: 160px;">
+              <label for="workflowFilter">Workflow</label>
+              <select id="workflowFilter"></select>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; min-width: 160px;">
+              <label for="agentFilter">Agent</label>
+              <select id="agentFilter"></select>
+            </div>
+          </div>
+          <button class="btn" id="exportBtn" type="button">Export JSON</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div id="chartjsWarning" class="warn" style="display:none; margin-bottom:14px;">
+        Chart.js is not available. This dashboard expects Chart.js to be loaded.
+        If you are offline, bundle Chart.js locally (or open this file with network access).
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <h2>Timeline (Execution Steps)</h2>
+          <div class="meta">
+            <div>Click a point to inspect state snapshot.</div>
+            <div>Colors: running (blue), failed (red), completed (green), checkpointed (yellow)</div>
+          </div>
+          <div class="chartBox">
+            <canvas id="timelineChart" aria-label="Timeline chart" role="img"></canvas>
+          </div>
+          <div class="legend" aria-label="Legend">
+            <span class="tag"><span class="dot" style="background:var(--running)"></span>running</span>
+            <span class="tag"><span class="dot" style="background:var(--failed)"></span>failed</span>
+            <span class="tag"><span class="dot" style="background:var(--completed)"></span>completed</span>
+            <span class="tag"><span class="dot" style="background:var(--checkpointed)"></span>checkpointed</span>
+          </div>
+        </section>
+
+        <aside class="split">
+          <section class="card">
+            <h2>State Inspection (Current Context / Memory)</h2>
+            <div class="stateHeader">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <div id="selectedTitle" style="font-family:var(--mono); font-size:12px; color:var(--text);">Select a step…</div>
+                <div id="selectedSubtitle" style="font-family:var(--mono); font-size:12px; color:var(--muted);"></div>
+              </div>
+              <button class="miniBtn" id="copyStateBtn" type="button" disabled>Copy state JSON</button>
+            </div>
+
+            <div class="kvs" style="margin-bottom:10px;">
+              <div class="kv">
+                <div class="k">Status</div>
+                <div class="v" id="selectedStatus">—</div>
+              </div>
+              <div class="kv">
+                <div class="k">Checkpoint</div>
+                <div class="v" id="selectedCheckpoint">—</div>
+              </div>
+            </div>
+
+            <pre id="statePre" aria-label="State snapshot">{\n  "hint": "Click a timeline point to inspect the agent state snapshot."\n}</pre>
+          </section>
+
+          <section class="card">
+            <h2>Recovery Checkpoints</h2>
+            <div class="meta">
+              <div>These are safe resume points captured during execution.</div>
+            </div>
+            <div class="list" id="checkpointList"></div>
+            <div class="footerNote">
+              Tip: Click “Resume” to jump the inspector to that checkpoint’s step.
+            </div>
+          </section>
+        </aside>
+
+        <section class="card" style="grid-column: 1 / -1;">
+          <h2>Task Dependency Graph (Multi-step Workflows)</h2>
+          <div class="meta">
+            <div>Nodes are tasks; edges indicate dependencies (A → B means B depends on A).</div>
+            <div>Click a node to inspect the most recent step for that task.</div>
+          </div>
+          <div class="chartBox" style="height:340px;">
+            <canvas id="depChart" aria-label="Dependency graph" role="img"></canvas>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Chart.js (required by TASK.md). This file uses a CDN for simplicity. -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <script>
+    // ---------------------------
+    // Sample data
+    // ---------------------------
+    const SAMPLE = (() => {
+      const t0 = Date.now() - 1000 * 60 * 25;
+      const ts = (min) => t0 + min * 60 * 1000;
+
+      const agents = [
+        { id: "agent:planner", name: "Planner", role: "Decomposes tasks, plans recovery" },
+        { id: "agent:executor", name: "Executor", role: "Runs tools, mutates state" },
+        { id: "agent:validator", name: "Validator", role: "Checks outputs, gates completion" },
+      ];
+
+      const workflows = [
+        { id: "wf:incident", name: "Incident Triage (fails + recovery)", status: "failed" },
+        { id: "wf:release", name: "Release Build (successful multi-step)", status: "completed" },
+      ];
+
+      // Tasks are nodes in the dependency graph.
+      const tasks = [
+        { id: "task:intake", label: "Intake" },
+        { id: "task:repro", label: "Reproduce" },
+        { id: "task:mitigate", label: "Mitigate" },
+        { id: "task:postmortem", label: "Postmortem" },
+        { id: "task:compile", label: "Compile" },
+        { id: "task:test", label: "Test" },
+        { id: "task:package", label: "Package" },
+        { id: "task:deploy", label: "Deploy" },
+      ];
+
+      const edges = [
+        // Incident triage
+        { from: "task:intake", to: "task:repro" },
+        { from: "task:repro", to: "task:mitigate" },
+        { from: "task:mitigate", to: "task:postmortem" },
+        // Release workflow
+        { from: "task:compile", to: "task:test" },
+        { from: "task:test", to: "task:package" },
+        { from: "task:package", to: "task:deploy" },
+      ];
+
+      // Steps represent the timeline (agent execution events), and include state snapshots.
+      // Demonstrations required by TASK.md:
+      // - failed task with recovery point
+      // - successful multi-step workflow
+      // - persistent state across steps
+      const steps = [
+        // Workflow: incident
+        {
+          id: "step:001",
+          workflowId: "wf:incident",
+          taskId: "task:intake",
+          agentId: "agent:planner",
+          ts: ts(0),
+          label: "Parse incident report",
+          status: "completed",
+          checkpointId: "cp:triage:baseline",
+          state: {
+            context: {
+              objective: "Stabilize API latency regression",
+              constraints: ["no customer-impacting downtime", "keep audit trail"],
+              inputs: { pagerDutyId: "PD-18421", severity: "SEV-2" }
+            },
+            memory: {
+              sessionId: "sess-7f1c",
+              runCounter: 1,
+              notes: ["Initial triage started"],
+            },
+            lastTool: null,
+          }
+        },
+        {
+          id: "step:002",
+          workflowId: "wf:incident",
+          taskId: "task:repro",
+          agentId: "agent:executor",
+          ts: ts(3),
+          label: "Run load test to reproduce",
+          status: "running",
+          checkpointId: null,
+          state: {
+            context: {
+              hypothesis: "Regression triggered by new cache invalidation path",
+              nextActions: ["run canary load", "compare p95 vs baseline"],
+            },
+            memory: {
+              sessionId: "sess-7f1c",
+              runCounter: 2,
+              notes: ["Kicked off load test"],
+              lastMetrics: { p50: 110, p95: 760 }
+            },
+            lastTool: { name: "loadtest", args: { durationSec: 120, rps: 300 } },
+          }
+        },
+        {
+          id: "step:003",
+          workflowId: "wf:incident",
+          taskId: "task:mitigate",
+          agentId: "agent:executor",
+          ts: ts(7),
+          label: "Apply mitigation (feature flag rollback)",
+          status: "failed",
+          checkpointId: "cp:mitigate:prechange",
+          error: {
+            code: "FF-403",
+            message: "Feature flag service denied write (missing entitlement)",
+            retriable: true
+          },
+          state: {
+            context: {
+              mitigation: { type: "feature_flag", flag: "cache_invalidation_v2", action: "disable" },
+              rollbackPlan: "Use on-call override group; otherwise deploy hotfix"
+            },
+            memory: {
+              sessionId: "sess-7f1c",
+              runCounter: 3,
+              notes: ["Mitigation failed: permission issue"],
+              lastMetrics: { p50: 120, p95: 910 },
+              approvals: { required: ["oncall-override"] }
+            },
+            lastTool: { name: "flagctl", args: { flag: "cache_invalidation_v2", enabled: false } },
+          }
+        },
+        {
+          id: "step:004",
+          workflowId: "wf:incident",
+          taskId: "task:mitigate",
+          agentId: "agent:planner",
+          ts: ts(10),
+          label: "Recovery: switch to override path",
+          status: "checkpointed",
+          checkpointId: "cp:mitigate:override-ready",
+          state: {
+            context: {
+              recovery: {
+                resumeFrom: "cp:mitigate:prechange",
+                path: "Request override + reapply change",
+                preconditions: ["override membership confirmed", "audit log enabled"]
+              }
+            },
+            memory: {
+              sessionId: "sess-7f1c",
+              runCounter: 4,
+              notes: ["Created recovery checkpoint for mitigation"],
+              approvals: { required: ["oncall-override"], granted: [] }
+            },
+            lastTool: null,
+          }
+        },
+
+        // Workflow: release
+        {
+          id: "step:101",
+          workflowId: "wf:release",
+          taskId: "task:compile",
+          agentId: "agent:executor",
+          ts: ts(1),
+          label: "Compile build artifacts",
+          status: "completed",
+          checkpointId: "cp:release:artifacts",
+          state: {
+            context: { repo: "agent-sdk", branch: "main", target: "linux-x64" },
+            memory: { sessionId: "sess-2aa9", runCounter: 1, notes: ["Build compiled"], artifacts: ["dist/app.bin"] },
+            lastTool: { name: "build", args: { target: "linux-x64" } }
+          }
+        },
+        {
+          id: "step:102",
+          workflowId: "wf:release",
+          taskId: "task:test",
+          agentId: "agent:validator",
+          ts: ts(4),
+          label: "Run unit + integration tests",
+          status: "completed",
+          checkpointId: null,
+          state: {
+            context: { testSuites: ["unit", "integration"], coverageGate: 0.85 },
+            memory: { sessionId: "sess-2aa9", runCounter: 2, notes: ["Tests passed"], test: { pass: 1421, fail: 0 } },
+            lastTool: { name: "testrunner", args: { suites: ["unit","integration"] } }
+          }
+        },
+        {
+          id: "step:103",
+          workflowId: "wf:release",
+          taskId: "task:package",
+          agentId: "agent:executor",
+          ts: ts(6),
+          label: "Package release",
+          status: "completed",
+          checkpointId: "cp:release:package",
+          state: {
+            context: { version: "1.8.0", format: "tar.gz" },
+            memory: { sessionId: "sess-2aa9", runCounter: 3, notes: ["Package ready"], artifacts: ["release/agent-sdk-1.8.0.tgz"] },
+            lastTool: { name: "packager", args: { version: "1.8.0" } }
+          }
+        },
+        {
+          id: "step:104",
+          workflowId: "wf:release",
+          taskId: "task:deploy",
+          agentId: "agent:executor",
+          ts: ts(9),
+          label: "Deploy to production",
+          status: "completed",
+          checkpointId: null,
+          state: {
+            context: { environment: "prod", strategy: "rolling", maxUnavailable: 1 },
+            memory: { sessionId: "sess-2aa9", runCounter: 4, notes: ["Deployment complete"], deployment: { healthy: true } },
+            lastTool: { name: "deployer", args: { env: "prod", strategy: "rolling" } }
+          }
+        },
+      ];
+
+      const checkpoints = [
+        {
+          id: "cp:triage:baseline",
+          label: "Baseline captured",
+          stepId: "step:001",
+          workflowId: "wf:incident",
+          resumable: true,
+          notes: "Known-good context: incident metadata + constraints"
+        },
+        {
+          id: "cp:mitigate:prechange",
+          label: "Pre-change checkpoint",
+          stepId: "step:003",
+          workflowId: "wf:incident",
+          resumable: true,
+          notes: "Safe resume before applying mitigation; includes failure details"
+        },
+        {
+          id: "cp:mitigate:override-ready",
+          label: "Override recovery ready",
+          stepId: "step:004",
+          workflowId: "wf:incident",
+          resumable: true,
+          notes: "Recovery plan written; ready to request override and retry"
+        },
+        {
+          id: "cp:release:artifacts",
+          label: "Artifacts built",
+          stepId: "step:101",
+          workflowId: "wf:release",
+          resumable: true,
+          notes: "Can resume from compiled artifacts"
+        },
+        {
+          id: "cp:release:package",
+          label: "Package created",
+          stepId: "step:103",
+          workflowId: "wf:release",
+          resumable: true,
+          notes: "Can resume from package step"
+        },
+      ];
+
+      // Provide a pre-laid-out graph (x,y) so we don't need a layout engine.
+      const graphLayout = {
+        "task:intake": { x: 10, y: 70 },
+        "task:repro": { x: 35, y: 70 },
+        "task:mitigate": { x: 60, y: 70 },
+        "task:postmortem": { x: 85, y: 70 },
+        "task:compile": { x: 10, y: 25 },
+        "task:test": { x: 35, y: 25 },
+        "task:package": { x: 60, y: 25 },
+        "task:deploy": { x: 85, y: 25 },
+      };
+
+      return { agents, workflows, tasks, edges, steps, checkpoints, graphLayout };
+    })();
+
+    // ---------------------------
+    // Utilities
+    // ---------------------------
+    const COLORS = {
+      running: getComputedStyle(document.documentElement).getPropertyValue('--running').trim(),
+      failed: getComputedStyle(document.documentElement).getPropertyValue('--failed').trim(),
+      completed: getComputedStyle(document.documentElement).getPropertyValue('--completed').trim(),
+      checkpointed: getComputedStyle(document.documentElement).getPropertyValue('--checkpointed').trim(),
+      muted: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim(),
+    };
+
+    function fmtTime(ms){
+      const d = new Date(ms);
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      const ss = String(d.getSeconds()).padStart(2,'0');
+      return `${hh}:${mm}:${ss}`;
+    }
+
+    function safeJSONStringify(obj){
+      return JSON.stringify(obj, (k,v) => {
+        if (v instanceof Error) return { name: v.name, message: v.message, stack: v.stack };
+        return v;
+      }, 2);
+    }
+
+    function downloadJSON(filename, payload){
+      const blob = new Blob([safeJSONStringify(payload)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function copyToClipboard(text){
+      // Best effort.
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      }
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); } finally { ta.remove(); }
+      return Promise.resolve();
+    }
+
+    function byId(arr){
+      const m = new Map();
+      for (const x of arr) m.set(x.id, x);
+      return m;
+    }
+
+    const stepsById = () => byId(SAMPLE.steps);
+    const agentsById = () => byId(SAMPLE.agents);
+    const workflowsById = () => byId(SAMPLE.workflows);
+    const tasksById = () => byId(SAMPLE.tasks);
+
+    // ---------------------------
+    // State: filters + selection
+    // ---------------------------
+    const UI = {
+      workflowFilter: document.getElementById('workflowFilter'),
+      agentFilter: document.getElementById('agentFilter'),
+      exportBtn: document.getElementById('exportBtn'),
+      timelineCanvas: document.getElementById('timelineChart'),
+      depCanvas: document.getElementById('depChart'),
+      checkpointList: document.getElementById('checkpointList'),
+      selectedTitle: document.getElementById('selectedTitle'),
+      selectedSubtitle: document.getElementById('selectedSubtitle'),
+      selectedStatus: document.getElementById('selectedStatus'),
+      selectedCheckpoint: document.getElementById('selectedCheckpoint'),
+      statePre: document.getElementById('statePre'),
+      copyStateBtn: document.getElementById('copyStateBtn'),
+      chartjsWarning: document.getElementById('chartjsWarning'),
+    };
+
+    const FILTERS = {
+      workflowId: 'all',
+      agentId: 'all',
+    };
+
+    let selectedStepId = null;
+
+    // ---------------------------
+    // Rendering: dropdowns + checkpoints
+    // ---------------------------
+    function initFilters(){
+      UI.workflowFilter.innerHTML = '';
+      UI.agentFilter.innerHTML = '';
+
+      const wfOptAll = document.createElement('option');
+      wfOptAll.value = 'all';
+      wfOptAll.textContent = 'All workflows';
+      UI.workflowFilter.appendChild(wfOptAll);
+      for (const wf of SAMPLE.workflows){
+        const o = document.createElement('option');
+        o.value = wf.id;
+        o.textContent = wf.name;
+        UI.workflowFilter.appendChild(o);
+      }
+
+      const agOptAll = document.createElement('option');
+      agOptAll.value = 'all';
+      agOptAll.textContent = 'All agents';
+      UI.agentFilter.appendChild(agOptAll);
+      for (const ag of SAMPLE.agents){
+        const o = document.createElement('option');
+        o.value = ag.id;
+        o.textContent = `${ag.name}`;
+        UI.agentFilter.appendChild(o);
+      }
+
+      UI.workflowFilter.value = FILTERS.workflowId;
+      UI.agentFilter.value = FILTERS.agentId;
+
+      UI.workflowFilter.addEventListener('change', () => {
+        FILTERS.workflowId = UI.workflowFilter.value;
+        rerenderAll();
+      });
+      UI.agentFilter.addEventListener('change', () => {
+        FILTERS.agentId = UI.agentFilter.value;
+        rerenderAll();
+      });
+
+      UI.exportBtn.addEventListener('click', () => {
+        downloadJSON('agent-state-tracker.sample.json', SAMPLE);
+      });
+    }
+
+    function filteredSteps(){
+      return SAMPLE.steps
+        .filter(s => FILTERS.workflowId === 'all' ? true : s.workflowId === FILTERS.workflowId)
+        .filter(s => FILTERS.agentId === 'all' ? true : s.agentId === FILTERS.agentId)
+        .slice()
+        .sort((a,b) => a.ts - b.ts);
+    }
+
+    function filteredCheckpoints(){
+      return SAMPLE.checkpoints
+        .filter(cp => FILTERS.workflowId === 'all' ? true : cp.workflowId === FILTERS.workflowId)
+        .slice();
+    }
+
+    function renderCheckpointList(){
+      UI.checkpointList.innerHTML = '';
+      const wfMap = workflowsById();
+      const agMap = agentsById();
+      const stMap = stepsById();
+
+      const cps = filteredCheckpoints();
+      if (!cps.length){
+        const empty = document.createElement('div');
+        empty.className = 'checkpoint';
+        empty.innerHTML = `<div class="title">No checkpoints in current filter.</div>`;
+        UI.checkpointList.appendChild(empty);
+        return;
+      }
+
+      for (const cp of cps){
+        const step = stMap.get(cp.stepId);
+        const wf = wfMap.get(cp.workflowId);
+        const ag = step ? agMap.get(step.agentId) : null;
+
+        const el = document.createElement('div');
+        el.className = 'checkpoint';
+        const statusColor = COLORS.checkpointed;
+        el.style.borderColor = 'rgba(234,179,8,.35)';
+        el.innerHTML = `
+          <div class="checkpointTop">
+            <div>
+              <div class="title"><span style="color:${statusColor};">●</span> ${cp.label}</div>
+              <div class="desc">${wf ? wf.name : cp.workflowId} · ${step ? fmtTime(step.ts) : '—'} · ${ag ? ag.name : ''}</div>
+            </div>
+            <button class="miniBtn" type="button" data-step="${cp.stepId}">Resume</button>
+          </div>
+          <div class="desc">${cp.notes}</div>
+        `;
+        el.querySelector('button').addEventListener('click', () => {
+          if (step) selectStep(step.id, { source: 'checkpoint' });
+        });
+        UI.checkpointList.appendChild(el);
+      }
+    }
+
+    // ---------------------------
+    // Charts
+    // ---------------------------
+    let timelineChart = null;
+    let depChart = null;
+
+    const edgePlugin = {
+      id: 'edgePlugin',
+      afterDatasetsDraw(chart, args, pluginOptions){
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data) return;
+
+        const nodesByTask = pluginOptions.nodesByTask || new Map();
+        const edges = pluginOptions.edges || [];
+
+        ctx.save();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(147,164,186,.55)';
+        ctx.fillStyle = 'rgba(147,164,186,.55)';
+
+        const drawArrow = (x1,y1,x2,y2) => {
+          const headLen = 8;
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const angle = Math.atan2(dy, dx);
+
+          // Shorten so we don't draw into the node circle.
+          const shorten = 14;
+          const len = Math.sqrt(dx*dx + dy*dy);
+          if (len < 2*shorten) return;
+          const sx1 = x1 + (dx/len)*shorten;
+          const sy1 = y1 + (dy/len)*shorten;
+          const sx2 = x2 - (dx/len)*shorten;
+          const sy2 = y2 - (dy/len)*shorten;
+
+          ctx.beginPath();
+          ctx.moveTo(sx1, sy1);
+          ctx.lineTo(sx2, sy2);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(sx2, sy2);
+          ctx.lineTo(sx2 - headLen * Math.cos(angle - Math.PI/7), sy2 - headLen * Math.sin(angle - Math.PI/7));
+          ctx.lineTo(sx2 - headLen * Math.cos(angle + Math.PI/7), sy2 - headLen * Math.sin(angle + Math.PI/7));
+          ctx.closePath();
+          ctx.fill();
+        };
+
+        for (const e of edges){
+          const a = nodesByTask.get(e.from);
+          const b = nodesByTask.get(e.to);
+          if (!a || !b) continue;
+          drawArrow(a.x, a.y, b.x, b.y);
+        }
+
+        ctx.restore();
+      }
+    };
+
+    function buildTimelineChart(){
+      if (!window.Chart){
+        UI.chartjsWarning.style.display = '';
+        return;
+      }
+
+      const wfIndex = new Map();
+      const visibleWfs = (FILTERS.workflowId === 'all') ? SAMPLE.workflows : SAMPLE.workflows.filter(w => w.id === FILTERS.workflowId);
+      visibleWfs.forEach((wf, i) => wfIndex.set(wf.id, i));
+
+      const pointsByStatus = {
+        running: [], failed: [], completed: [], checkpointed: []
+      };
+
+      for (const s of filteredSteps()){
+        if (!wfIndex.has(s.workflowId)) continue;
+        pointsByStatus[s.status] = pointsByStatus[s.status] || [];
+        pointsByStatus[s.status].push({
+          x: s.ts,
+          y: wfIndex.get(s.workflowId),
+          stepId: s.id,
+          label: s.label,
+          workflowId: s.workflowId,
+          agentId: s.agentId,
+          taskId: s.taskId,
+        });
+      }
+
+      const datasets = [
+        {
+          label: 'completed',
+          data: pointsByStatus.completed,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointBackgroundColor: COLORS.completed,
+          pointBorderColor: 'rgba(0,0,0,.25)',
+          pointBorderWidth: 1,
+          showLine: false,
+        },
+        {
+          label: 'running',
+          data: pointsByStatus.running,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointBackgroundColor: COLORS.running,
+          pointBorderColor: 'rgba(0,0,0,.25)',
+          pointBorderWidth: 1,
+          showLine: false,
+        },
+        {
+          label: 'failed',
+          data: pointsByStatus.failed,
+          pointRadius: 7,
+          pointHoverRadius: 9,
+          pointBackgroundColor: COLORS.failed,
+          pointBorderColor: 'rgba(0,0,0,.25)',
+          pointBorderWidth: 1,
+          showLine: false,
+        },
+        {
+          label: 'checkpointed',
+          data: pointsByStatus.checkpointed,
+          pointRadius: 7,
+          pointHoverRadius: 9,
+          pointBackgroundColor: COLORS.checkpointed,
+          pointBorderColor: 'rgba(0,0,0,.25)',
+          pointBorderWidth: 1,
+          pointStyle: 'rectRot',
+          showLine: false,
+        },
+      ];
+
+      const minTs = Math.min(...filteredSteps().map(s => s.ts));
+      const maxTs = Math.max(...filteredSteps().map(s => s.ts));
+      const pad = 1000 * 60 * 2;
+
+      const config = {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          parsing: false,
+          animation: { duration: 250 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title(items){
+                  const p = items?.[0]?.raw;
+                  if (!p) return '';
+                  return `${fmtTime(p.x)} · ${p.label}`;
+                },
+                label(item){
+                  const p = item.raw;
+                  const wf = workflowsById().get(p.workflowId)?.name || p.workflowId;
+                  const ag = agentsById().get(p.agentId)?.name || p.agentId;
+                  const task = tasksById().get(p.taskId)?.label || p.taskId;
+                  return [`workflow: ${wf}`, `agent: ${ag}`, `task: ${task}`, `status: ${item.dataset.label}`];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              min: isFinite(minTs) ? (minTs - pad) : undefined,
+              max: isFinite(maxTs) ? (maxTs + pad) : undefined,
+              grid: { color: 'rgba(31,42,58,.55)' },
+              ticks: {
+                color: 'rgba(147,164,186,.9)',
+                callback: (v) => fmtTime(v)
+              },
+              title: { display: true, text: 'Timestamp', color: 'rgba(147,164,186,.9)', font: { family: getComputedStyle(document.documentElement).getPropertyValue('--mono').trim() } }
+            },
+            y: {
+              type: 'linear',
+              min: -0.6,
+              max: visibleWfs.length - 0.4,
+              grid: { color: 'rgba(31,42,58,.35)' },
+              ticks: {
+                stepSize: 1,
+                color: 'rgba(147,164,186,.9)',
+                callback: (v) => {
+                  const i = Math.round(v);
+                  const wf = visibleWfs[i];
+                  return wf ? wf.name : '';
+                }
+              },
+              title: { display: true, text: 'Workflow', color: 'rgba(147,164,186,.9)', font: { family: getComputedStyle(document.documentElement).getPropertyValue('--mono').trim() } }
+            }
+          },
+          onClick: (evt, elements, chart) => {
+            if (!elements || !elements.length) return;
+            const el = elements[0];
+            const point = chart.data.datasets[el.datasetIndex].data[el.index];
+            if (point && point.stepId) selectStep(point.stepId, { source: 'timeline' });
+          }
+        }
+      };
+
+      if (timelineChart) timelineChart.destroy();
+      timelineChart = new Chart(UI.timelineCanvas.getContext('2d'), config);
+    }
+
+    function latestStepByTask(){
+      const m = new Map();
+      for (const s of SAMPLE.steps.slice().sort((a,b)=>a.ts-b.ts)){
+        m.set(s.taskId, s);
+      }
+      return m;
+    }
+
+    function buildDependencyChart(){
+      if (!window.Chart){
+        UI.chartjsWarning.style.display = '';
+        return;
+      }
+
+      const latestByTask = latestStepByTask();
+
+      const visibleTaskIds = new Set();
+      for (const s of filteredSteps()) visibleTaskIds.add(s.taskId);
+
+      // If filters hide steps, still show all tasks, but de-emphasize those out of filter.
+      const nodeData = SAMPLE.tasks.map(t => {
+        const pos = SAMPLE.graphLayout[t.id] || { x: 0, y: 0 };
+        const latest = latestByTask.get(t.id);
+        const status = latest?.status || 'completed';
+        const active = visibleTaskIds.has(t.id);
+        return {
+          x: pos.x,
+          y: pos.y,
+          taskId: t.id,
+          label: t.label,
+          status,
+          active
+        };
+      });
+
+      const nodesByTask = new Map();
+      // We'll fill pixel coords later in plugin options using chart scales.
+
+      const config = {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'tasks',
+            data: nodeData,
+            parsing: false,
+            pointRadius: (ctx) => {
+              const p = ctx.raw;
+              return p.active ? 9 : 7;
+            },
+            pointHoverRadius: 11,
+            pointBackgroundColor: (ctx) => {
+              const p = ctx.raw;
+              const base = COLORS[p.status] || COLORS.muted;
+              return p.active ? base : 'rgba(147,164,186,.35)';
+            },
+            pointBorderColor: 'rgba(0,0,0,.35)',
+            pointBorderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 250 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title(items){
+                  const p = items?.[0]?.raw;
+                  return p ? p.label : '';
+                },
+                label(item){
+                  const p = item.raw;
+                  const latest = latestByTask.get(p.taskId);
+                  const wf = latest ? (workflowsById().get(latest.workflowId)?.name || latest.workflowId) : '—';
+                  const ag = latest ? (agentsById().get(latest.agentId)?.name || latest.agentId) : '—';
+                  return [
+                    `status: ${p.status}`,
+                    `latest workflow: ${wf}`,
+                    `latest agent: ${ag}`,
+                    latest ? `latest step: ${latest.label}` : 'latest step: —'
+                  ];
+                }
+              }
+            },
+            edgePlugin: {
+              edges: SAMPLE.edges,
+              nodesByTask: nodesByTask,
+            }
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              min: 0,
+              max: 100,
+              grid: { color: 'rgba(31,42,58,.35)' },
+              ticks: { color: 'rgba(147,164,186,.85)', callback: () => '' },
+              title: { display: false },
+            },
+            y: {
+              type: 'linear',
+              min: 0,
+              max: 100,
+              grid: { color: 'rgba(31,42,58,.35)' },
+              ticks: { color: 'rgba(147,164,186,.85)', callback: () => '' },
+              title: { display: false },
+            }
+          },
+          onClick: (evt, elements, chart) => {
+            if (!elements || !elements.length) return;
+            const el = elements[0];
+            const p = chart.data.datasets[el.datasetIndex].data[el.index];
+            if (!p) return;
+            const latest = latestByTask.get(p.taskId);
+            if (latest) selectStep(latest.id, { source: 'dependency' });
+          }
+        },
+        plugins: [
+          // Make edges render beneath nodes by computing pixel coords before drawing.
+          {
+            id: 'edgeCoordPrecompute',
+            beforeDatasetsDraw(chart){
+              const xScale = chart.scales.x;
+              const yScale = chart.scales.y;
+              nodesByTask.clear();
+              const pts = chart.data.datasets[0].data;
+              for (const p of pts){
+                nodesByTask.set(p.taskId, {
+                  x: xScale.getPixelForValue(p.x),
+                  y: yScale.getPixelForValue(p.y)
+                });
+              }
+            }
+          },
+          edgePlugin
+        ]
+      };
+
+      if (depChart) depChart.destroy();
+      depChart = new Chart(UI.depCanvas.getContext('2d'), config);
+    }
+
+    // ---------------------------
+    // Inspector
+    // ---------------------------
+    function selectStep(stepId, { source } = {}){
+      const st = stepsById().get(stepId);
+      if (!st) return;
+      selectedStepId = stepId;
+
+      const wf = workflowsById().get(st.workflowId);
+      const ag = agentsById().get(st.agentId);
+      const task = tasksById().get(st.taskId);
+
+      UI.selectedTitle.textContent = st.label;
+      UI.selectedSubtitle.textContent = `${wf ? wf.name : st.workflowId} · ${ag ? ag.name : st.agentId} · ${task ? task.label : st.taskId} · ${fmtTime(st.ts)}${source ? ` · source:${source}` : ''}`;
+
+      UI.selectedStatus.textContent = st.status;
+      UI.selectedStatus.style.color = COLORS[st.status] || COLORS.muted;
+
+      UI.selectedCheckpoint.textContent = st.checkpointId ? st.checkpointId : '—';
+      UI.selectedCheckpoint.style.color = st.checkpointId ? COLORS.checkpointed : COLORS.muted;
+
+      const payload = {
+        step: {
+          id: st.id,
+          workflowId: st.workflowId,
+          taskId: st.taskId,
+          agentId: st.agentId,
+          timestamp: st.ts,
+          time: new Date(st.ts).toISOString(),
+          label: st.label,
+          status: st.status,
+          checkpointId: st.checkpointId || null,
+          error: st.error || null
+        },
+        state: st.state
+      };
+
+      UI.statePre.textContent = safeJSONStringify(payload);
+      UI.copyStateBtn.disabled = false;
+      UI.copyStateBtn.onclick = () => copyToClipboard(UI.statePre.textContent);
+
+      // Visual hint: briefly pulse the selected title.
+      UI.selectedTitle.animate([
+        { filter: 'brightness(1.0)' },
+        { filter: 'brightness(1.35)' },
+        { filter: 'brightness(1.0)' },
+      ], { duration: 450, easing: 'ease-out' });
+    }
+
+    // ---------------------------
+    // App lifecycle
+    // ---------------------------
+    function rerenderAll(){
+      renderCheckpointList();
+      buildTimelineChart();
+      buildDependencyChart();
+
+      // If current selection is filtered out, keep inspector but mark it.
+      if (selectedStepId){
+        const visible = filteredSteps().some(s => s.id === selectedStepId);
+        if (!visible){
+          UI.selectedSubtitle.textContent = (UI.selectedSubtitle.textContent || '') + ' · (not in current filter)';
+        }
+      }
+    }
+
+    function main(){
+      initFilters();
+      renderCheckpointList();
+
+      if (!window.Chart){
+        UI.chartjsWarning.style.display = '';
+        // Still show data export and lists.
+        return;
+      }
+
+      // Use monospace for chart fonts to match technical aesthetic.
+      Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue('--mono').trim();
+      Chart.defaults.color = 'rgba(147,164,186,.9)';
+
+      buildTimelineChart();
+      buildDependencyChart();
+
+      // Default selection: most recent step in the filtered view.
+      const fs = filteredSteps();
+      if (fs.length) selectStep(fs[fs.length-1].id, { source: 'auto' });
+    }
+
+    main();
+  </script>
+</body>
+</html>
