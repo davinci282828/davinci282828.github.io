@@ -1096,11 +1096,16 @@
             liSection.style.display = 'none';
             bioSection.style.display = 'none';
 
+            const organicNotice = document.getElementById('organic-notice');
+            const exportActions = document.querySelector('.export-actions');
+
             if (typeFilter === 'therapist-bio') {
                 adHeader.style.display = 'none';
                 gridAds.style.display = 'none';
                 orgSection.style.display = 'none';
                 gridOrganic.style.display = 'none';
+                if (organicNotice) organicNotice.style.display = 'none';
+                if (exportActions) exportActions.style.display = 'none';
                 bioSection.style.display = 'block';
                 renderTherapistBios();
                 return;
@@ -1111,6 +1116,8 @@
                 gridAds.style.display = 'none';
                 orgSection.style.display = 'none';
                 gridOrganic.style.display = 'none';
+                if (organicNotice) organicNotice.style.display = 'none';
+                if (exportActions) exportActions.style.display = 'none';
                 pigSection.style.display = 'block';
                 renderPersonalIG();
                 return;
@@ -1122,10 +1129,16 @@
                 gridAds.style.display = 'none';
                 orgSection.style.display = 'none';
                 gridOrganic.style.display = 'none';
+                if (organicNotice) organicNotice.style.display = 'none';
+                if (exportActions) exportActions.style.display = 'none';
                 liSection.style.display = 'block';
                 renderLinkedIn();
                 return;
             }
+
+            // Restore for default views
+            if (organicNotice) organicNotice.style.display = 'block';
+            if (exportActions) exportActions.style.display = '';
 
             if (typeFilter === 'organic') {
                 adHeader.style.display = 'none';
