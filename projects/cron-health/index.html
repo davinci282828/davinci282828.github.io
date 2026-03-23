@@ -463,19 +463,42 @@
       return [];
     }
 
+    
+    function parseSchedule(scheduleObj) {
+      if (typeof scheduleObj === 'string') return scheduleObj;
+      if (!scheduleObj || typeof scheduleObj !== 'object') return '—';
+      
+      const kind = scheduleObj.kind;
+      if (kind === 'every') {
+        const ms = scheduleObj.everyMs || 0;
+        const mins = Math.round(ms / 60000);
+        const hours = Math.round(ms / 3600000);
+        const days = Math.round(ms / 86400000);
+        if (days >= 1) return `every ${days}d`;
+        if (hours >= 1) return `every ${hours}h`;
+        return `every ${mins}m`;
+      }
+      if (kind === 'at') return `once at ${(scheduleObj.at || '').split('T')[0]}`;
+      if (kind === 'cron') return scheduleObj.expr || '—';
+      return JSON.stringify(scheduleObj);
+    }
+
+
     function normalizeJob(job, index) {
-      const scheduleRaw = first(job.schedule, job.cron, job.cron_expr, job.cron_expression, job.expression);
-      const scheduleHuman = first(job.schedule_human, job.human_schedule, cronToHuman(scheduleRaw));
+      const state = job.state || {};
+      const payload = job.payload || {};
+      const scheduleRaw = typeof job.schedule === 'object' ? parseSchedule(job.schedule) : (job.schedule || job.cron || '—');
+      const scheduleHuman = scheduleRaw.startsWith('every') || scheduleRaw.startsWith('once') ? scheduleRaw : cronToHuman(scheduleRaw);
 
       return {
-        id: first(job.id, job.job_id, job.uuid, ''),
-        name: first(job.name, job.job_name, job.slug, job.task, `cron-job-${index + 1}`),
-        scheduleRaw: scheduleRaw || '—',
-        scheduleHuman: scheduleHuman || '—',
-        nextRun: toDate(first(job.next_run, job.nextRun, job.next, job.next_run_at, job.nextRunAt, job.next_scheduled_at)),
-        lastRun: toDate(first(job.last_run, job.lastRun, job.last, job.last_run_at, job.lastRunAt, job.last_executed_at)),
-        status: normalizeStatus(first(job.status, job.state, job.health)),
-        model: first(job.model, job.model_name, job.llm_model, job.runner_model, '—')
+        id: job.id || '',
+        name: job.name || `cron-job-${index + 1}`,
+        scheduleRaw: scheduleRaw,
+        scheduleHuman: scheduleHuman,
+        nextRun: toDate(state.nextRunAtMs || job.next_run || job.nextRun),
+        lastRun: toDate(state.lastRunAtMs || job.last_run || job.lastRun),
+        status: normalizeStatus(state.lastRunStatus || state.lastStatus || job.status || 'idle'),
+        model: payload.model || job.model || '—'
       };
     }
 
