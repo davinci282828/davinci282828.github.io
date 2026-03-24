@@ -1,0 +1,29 @@
+{
+  "skills": [
+    {
+      "name": "skill-creator",
+      "category": "authoring",
+      "install_date": "2026-01-15"
+    },
+    {
+      "name": "skill-installer",
+      "category": "operations",
+      "install_date": "2026-01-20"
+    },
+    {
+      "name": "python-debugger",
+      "category": "development",
+      "install_date": "2026-02-02"
+    },
+    {
+      "name": "spec-writer",
+      "category": "planning",
+      "install_date": "2026-02-11"
+    },
+    {
+      "name": "doc-refactor",
+      "category": "documentation",
+      "install_date": "2026-03-01"
+    }
+  ]
+}

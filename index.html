@@ -1,16 +1,830 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>Da Vinci Projects</title>
-<style>body{background:#0a0a0a;color:#e0e0e0;font-family:system-ui;padding:40px;max-width:600px;margin:0 auto}
-a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
-h1{font-size:20px}ul{list-style:none;padding:0}li{padding:8px 0;border-bottom:1px solid #222}</style></head>
-<body><h1>🔺 Da Vinci Projects</h1><ul>
-<li><a href="billing-audit/">billing-audit</a> — No description</li>
-<li><a href="emergence-sound/">emergence-sound</a> — Conway Game of Life driving spatial audio synthesis</li>
-<li><a href="insight-tracker/">insight-tracker</a> — No description</li>
-<li><a href="mental-health-gap/">mental-health-gap</a> — No description</li>
-<li><a href="mmhc-batch4-competitive/">mmhc-batch4-competitive</a> — Batch 4: Competitor Intelligence Ads</li>
-<li><a href="mmhc-rnt-alzheimers/">mmhc-rnt-alzheimers</a> — No description</li>
-<li><a href="pain-mapper/">pain-mapper</a> — No description</li>
-<li><a href="projects/">projects</a> — No description</li>
-<li><a href="referral-tracker/">referral-tracker</a> — No description</li>
-<li><a href="rnt-alzheimers/">rnt-alzheimers</a> — RNT & Alzheimer's content batch</li>
-</ul><footer style="margin-top:20px;color:#666;font-size:12px">Last updated: 2026-03-17 23:36:15 UTC</footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OpenClaw Skill Utilization Heatmap</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #1f2430;
+      --text: #e7ebf3;
+      --muted: #9aa4b2;
+      --border: #2b3240;
+      --accent: #6aa3ff;
+      --green: #1f7a44;
+      --yellow: #947b1b;
+      --red: #8a2a2a;
+      --gray: #4b5563;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #1a1f2b, var(--bg) 45%);
+      color: var(--text);
+      font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1, h2, h3 { margin: 0 0 10px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; }
+    .muted { color: var(--muted); }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+
+    .stack { display: grid; gap: 14px; }
+
+    .ingest-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dropzone {
+      border: 1px dashed #465068;
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 14px;
+      min-height: 120px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+      transition: border-color 0.2s ease, transform 0.12s ease, background 0.2s ease;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: #22304a;
+      transform: translateY(-1px);
+    }
+
+    .dropzone p { margin: 6px 0; }
+
+    button, .file-btn {
+      cursor: pointer;
+      border: 1px solid #3d4b66;
+      color: var(--text);
+      background: #23304a;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    button:hover, .file-btn:hover { filter: brightness(1.1); }
+
+    input[type="file"] { display: none; }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 84px;
+    }
+
+    .metric .value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+    }
+
+    .skill-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 106px;
+      display: grid;
+      align-content: space-between;
+      gap: 8px;
+      position: relative;
+      user-select: none;
+    }
+
+    .skill-card h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .skill-meta {
+      color: #d2d9e6;
+      font-size: 12px;
+      display: grid;
+      gap: 3px;
+    }
+
+    .state-green { background: linear-gradient(180deg, rgba(45, 178, 97, 0.26), rgba(45, 178, 97, 0.18)); }
+    .state-yellow { background: linear-gradient(180deg, rgba(205, 164, 48, 0.30), rgba(205, 164, 48, 0.18)); }
+    .state-red { background: linear-gradient(180deg, rgba(194, 67, 67, 0.32), rgba(194, 67, 67, 0.18)); }
+    .state-gray { background: linear-gradient(180deg, rgba(107, 114, 128, 0.34), rgba(107, 114, 128, 0.18)); }
+
+    .roi-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1.2fr 1fr;
+    }
+
+    .top-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .top-table th,
+    .top-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 6px;
+      text-align: left;
+    }
+
+    .top-table th { color: var(--muted); font-weight: 600; }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      background: var(--panel-2);
+    }
+
+    #tooltip {
+      position: fixed;
+      max-width: 280px;
+      pointer-events: none;
+      background: #0d1320;
+      border: 1px solid #3a4865;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #e9eef9;
+      font-size: 12px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.12s ease, transform 0.12s ease;
+      z-index: 999;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+      white-space: normal;
+    }
+
+    #tooltip.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .status-line {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      min-height: 18px;
+    }
+
+    @media (max-width: 960px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .roi-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .ingest-grid { grid-template-columns: 1fr; }
+      .heatmap-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
+
+    @media (max-width: 460px) {
+      .metrics { grid-template-columns: 1fr; }
+      h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container stack">
+    <section class="panel">
+      <h1>OpenClaw AgentSkill Utilization Heatmap</h1>
+      <p class="muted">Drop a skill manifest JSON and one or more session JSONL logs to build usage heatmap, stale/dormant status, and ROI estimates.</p>
+
+      <div class="ingest-grid">
+        <div>
+          <h2>1) Skill Manifest</h2>
+          <div id="manifestDrop" class="dropzone" tabindex="0" role="button" aria-label="Drop skill manifest file">
+            <p><strong>Drop manifest JSON here</strong></p>
+            <p class="muted">Format: { skills: [{ name, category, install_date }] }</p>
+            <label class="file-btn" for="manifestInput">Select Manifest File</label>
+            <input id="manifestInput" type="file" accept="application/json,.json" />
+          </div>
+          <div id="manifestMeta" class="meta-row"></div>
+        </div>
+
+        <div>
+          <h2>2) Session Logs</h2>
+          <div id="logsDrop" class="dropzone" tabindex="0" role="button" aria-label="Drop session log files">
+            <p><strong>Drop JSONL logs here</strong></p>
+            <p class="muted">Supports multiple files from ~/.openclaw/sessions/</p>
+            <label class="file-btn" for="logsInput">Select JSONL Files</label>
+            <input id="logsInput" type="file" accept=".jsonl,application/json,text/plain" multiple />
+          </div>
+          <div id="logsMeta" class="meta-row"></div>
+        </div>
+      </div>
+      <div class="meta-row">
+        <button id="clearBtn" type="button">Clear Loaded Data</button>
+        <span id="statusLine" class="status-line"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Summary Metrics</h2>
+      <div id="metrics" class="metrics">
+        <div class="metric"><div class="muted">Total Skills Installed</div><div class="value" id="mTotal">0</div></div>
+        <div class="metric"><div class="muted">Active (&lt;7 days)</div><div class="value" id="mActive">0</div></div>
+        <div class="metric"><div class="muted">Stale (7-30 days)</div><div class="value" id="mStale">0</div></div>
+        <div class="metric"><div class="muted">Dormant (30+ days)</div><div class="value" id="mDormant">0</div></div>
+        <div class="metric"><div class="muted">Never Used</div><div class="value" id="mNever">0</div></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Skill Usage Heatmap</h2>
+      <div class="legend">
+        <span class="legend-item"><span class="dot" style="background: var(--green)"></span>Used &lt; 7 days ago</span>
+        <span class="legend-item"><span class="dot" style="background: var(--yellow)"></span>Used 7-30 days ago</span>
+        <span class="legend-item"><span class="dot" style="background: var(--red)"></span>Used 30+ days ago</span>
+        <span class="legend-item"><span class="dot" style="background: var(--gray)"></span>Never used</span>
+      </div>
+      <div id="heatmap"></div>
+    </section>
+
+    <section class="panel">
+      <h2>ROI Indicators</h2>
+      <div class="roi-grid">
+        <div class="panel" style="margin:0;">
+          <h3>Total Estimated Time Saved</h3>
+          <div class="value" id="totalTimeSaved" style="font-size:30px;font-weight:700; margin:6px 0 0;">0m</div>
+          <p class="muted" style="margin-top:8px;">Formula: invocations × 15 minutes per skill invocation.</p>
+        </div>
+        <div class="panel" style="margin:0;">
+          <h3>Top 5 Most Valuable Skills</h3>
+          <div id="topSkillsWrap"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="tooltip" aria-hidden="true"></div>
+
+  <script>
+    const state = {
+      skills: [],
+      index: new Map(),
+      records: [],
+      files: {
+        manifest: null,
+        logs: []
+      }
+    };
+
+    const els = {
+      manifestDrop: document.getElementById('manifestDrop'),
+      logsDrop: document.getElementById('logsDrop'),
+      manifestInput: document.getElementById('manifestInput'),
+      logsInput: document.getElementById('logsInput'),
+      manifestMeta: document.getElementById('manifestMeta'),
+      logsMeta: document.getElementById('logsMeta'),
+      statusLine: document.getElementById('statusLine'),
+      heatmap: document.getElementById('heatmap'),
+      tooltip: document.getElementById('tooltip'),
+      clearBtn: document.getElementById('clearBtn'),
+      mTotal: document.getElementById('mTotal'),
+      mActive: document.getElementById('mActive'),
+      mStale: document.getElementById('mStale'),
+      mDormant: document.getElementById('mDormant'),
+      mNever: document.getElementById('mNever'),
+      totalTimeSaved: document.getElementById('totalTimeSaved'),
+      topSkillsWrap: document.getElementById('topSkillsWrap')
+    };
+
+    function setStatus(message) {
+      els.statusLine.textContent = message || '';
+    }
+
+    function normalize(text) {
+      return String(text || '').trim().toLowerCase();
+    }
+
+    function fmtDate(value) {
+      if (!value) return 'N/A';
+      const d = (value instanceof Date) ? value : new Date(value);
+      if (Number.isNaN(d.getTime())) return 'N/A';
+      return d.toLocaleDateString();
+    }
+
+    function daysSince(date) {
+      if (!date) return null;
+      const now = new Date();
+      const ms = now - date;
+      return Math.floor(ms / (1000 * 60 * 60 * 24));
+    }
+
+    function estimateMinutes(invocations) {
+      return invocations * 15;
+    }
+
+    function fmtMinutes(minutes) {
+      if (minutes >= 60) {
+        const h = minutes / 60;
+        return h % 1 === 0 ? h + 'h' : h.toFixed(1) + 'h';
+      }
+      return minutes + 'm';
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function attachDropzone(dropEl, onFiles) {
+      const stop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      ['dragenter', 'dragover'].forEach((evt) => {
+        dropEl.addEventListener(evt, (e) => {
+          stop(e);
+          dropEl.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach((evt) => {
+        dropEl.addEventListener(evt, (e) => {
+          stop(e);
+          dropEl.classList.remove('dragover');
+        });
+      });
+
+      dropEl.addEventListener('drop', (e) => {
+        const files = Array.from(e.dataTransfer?.files || []);
+        if (files.length) onFiles(files);
+      });
+
+      dropEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (dropEl === els.manifestDrop) els.manifestInput.click();
+          if (dropEl === els.logsDrop) els.logsInput.click();
+        }
+      });
+    }
+
+    function resetSkillCounters() {
+      for (const skill of state.skills) {
+        skill.invocations = 0;
+        skill.lastUsed = null;
+      }
+    }
+
+    function extractTimestampFromString(raw) {
+      const iso = raw.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/);
+      if (iso && !Number.isNaN(Date.parse(iso[0]))) return new Date(iso[0]);
+      const ymd = raw.match(/\d{4}-\d{2}-\d{2}/);
+      if (ymd && !Number.isNaN(Date.parse(ymd[0]))) return new Date(ymd[0]);
+      return null;
+    }
+
+    function extractTimestamp(record) {
+      if (!record || typeof record !== 'object') return null;
+
+      const directKeys = ['timestamp', 'time', 'date', 'created_at', 'updated_at', 'ts'];
+      for (const k of directKeys) {
+        if (record[k]) {
+          const d = new Date(record[k]);
+          if (!Number.isNaN(d.getTime())) return d;
+        }
+      }
+
+      const stack = [record];
+      const seen = new Set();
+
+      while (stack.length) {
+        const cur = stack.pop();
+        if (!cur || typeof cur !== 'object') continue;
+        if (seen.has(cur)) continue;
+        seen.add(cur);
+
+        for (const [k, v] of Object.entries(cur)) {
+          if (typeof v === 'string') {
+            if (/time|date|stamp|created|updated/i.test(k)) {
+              const d = new Date(v);
+              if (!Number.isNaN(d.getTime())) return d;
+            }
+            const maybe = extractTimestampFromString(v);
+            if (maybe) return maybe;
+          } else if (v && typeof v === 'object') {
+            stack.push(v);
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function resolveSkillFromToken(token) {
+      const t = normalize(token);
+      if (!t) return null;
+      if (state.index.has(t)) return t;
+
+      for (const skill of state.skills) {
+        const n = skill.norm;
+        if (n === t || n.includes(t) || t.includes(n)) return n;
+      }
+      return null;
+    }
+
+    function detectInvokedSkills(textLower) {
+      const found = new Set();
+      if (!textLower) return found;
+
+      const pathRegex = /(?:\/|^)([a-z0-9._-]+)\/skill\.md\b/gi;
+      let match;
+      while ((match = pathRegex.exec(textLower)) !== null) {
+        const skillNorm = resolveSkillFromToken(match[1]);
+        if (skillNorm) found.add(skillNorm);
+      }
+
+      for (const skill of state.skills) {
+        if (textLower.includes(skill.norm)) found.add(skill.norm);
+      }
+
+      return found;
+    }
+
+    function recomputeUsage() {
+      if (!state.skills.length) {
+        renderAll();
+        return;
+      }
+
+      resetSkillCounters();
+
+      for (const rec of state.records) {
+        const skillsFound = detectInvokedSkills(rec.textLower);
+        if (!skillsFound.size) continue;
+
+        for (const skillNorm of skillsFound) {
+          const s = state.index.get(skillNorm);
+          if (!s) continue;
+          s.invocations += 1;
+          if (rec.timestamp && (!s.lastUsed || rec.timestamp > s.lastUsed)) {
+            s.lastUsed = rec.timestamp;
+          }
+        }
+      }
+
+      renderAll();
+    }
+
+    function summarize() {
+      const result = {
+        total: state.skills.length,
+        active: 0,
+        stale: 0,
+        dormant: 0,
+        never: 0
+      };
+
+      for (const skill of state.skills) {
+        if (!skill.lastUsed) {
+          result.never += 1;
+          continue;
+        }
+        const d = daysSince(skill.lastUsed);
+        if (d < 7) result.active += 1;
+        else if (d <= 30) result.stale += 1;
+        else result.dormant += 1;
+      }
+      return result;
+    }
+
+    function stateClass(skill) {
+      if (!skill.lastUsed) return 'state-gray';
+      const d = daysSince(skill.lastUsed);
+      if (d < 7) return 'state-green';
+      if (d <= 30) return 'state-yellow';
+      return 'state-red';
+    }
+
+    function skillStatusText(skill) {
+      if (!skill.lastUsed) return 'Never used';
+      const d = daysSince(skill.lastUsed);
+      return d + ' day' + (d === 1 ? '' : 's') + ' since last use';
+    }
+
+    function renderMetrics() {
+      const s = summarize();
+      els.mTotal.textContent = s.total;
+      els.mActive.textContent = s.active;
+      els.mStale.textContent = s.stale;
+      els.mDormant.textContent = s.dormant;
+      els.mNever.textContent = s.never;
+    }
+
+    function showTooltip(html, event) {
+      els.tooltip.innerHTML = html;
+      els.tooltip.classList.add('show');
+      moveTooltip(event);
+    }
+
+    function hideTooltip() {
+      els.tooltip.classList.remove('show');
+    }
+
+    function moveTooltip(event) {
+      const pad = 14;
+      const tt = els.tooltip;
+      const maxX = window.innerWidth - tt.offsetWidth - pad;
+      const maxY = window.innerHeight - tt.offsetHeight - pad;
+      const x = Math.min(maxX, event.clientX + 16);
+      const y = Math.min(maxY, event.clientY + 16);
+      tt.style.left = Math.max(pad, x) + 'px';
+      tt.style.top = Math.max(pad, y) + 'px';
+    }
+
+    function renderHeatmap() {
+      if (!state.skills.length) {
+        els.heatmap.innerHTML = '<div class="empty">Load a manifest to render skill cells.</div>';
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'heatmap-grid';
+
+      const skillsSorted = [...state.skills].sort((a, b) => {
+        if (a.lastUsed && b.lastUsed) return b.lastUsed - a.lastUsed;
+        if (a.lastUsed) return -1;
+        if (b.lastUsed) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      for (const skill of skillsSorted) {
+        const card = document.createElement('div');
+        card.className = 'skill-card ' + stateClass(skill);
+
+        const safeName = escapeHtml(skill.name);
+        const safeCategory = escapeHtml(skill.category || 'Uncategorized');
+
+        card.innerHTML = `
+          <h3>${safeName}</h3>
+          <div class="skill-meta">
+            <div>Category: ${safeCategory}</div>
+            <div>${escapeHtml(skillStatusText(skill))}</div>
+          </div>
+        `;
+
+        const minutes = estimateMinutes(skill.invocations);
+        const tooltipHtml = `
+          <div><strong>${safeName}</strong></div>
+          <div>Invocations: ${skill.invocations}</div>
+          <div>Last used: ${escapeHtml(fmtDate(skill.lastUsed))}</div>
+          <div>Install date: ${escapeHtml(fmtDate(skill.installDateRaw))}</div>
+          <div>Estimated time saved: ${escapeHtml(fmtMinutes(minutes))}</div>
+        `;
+
+        card.addEventListener('mouseenter', (e) => showTooltip(tooltipHtml, e));
+        card.addEventListener('mousemove', moveTooltip);
+        card.addEventListener('mouseleave', hideTooltip);
+
+        grid.appendChild(card);
+      }
+
+      els.heatmap.innerHTML = '';
+      els.heatmap.appendChild(grid);
+    }
+
+    function renderROI() {
+      const withMinutes = state.skills.map((s) => ({
+        name: s.name,
+        category: s.category || 'Uncategorized',
+        invocations: s.invocations,
+        minutes: estimateMinutes(s.invocations)
+      }));
+
+      const totalMinutes = withMinutes.reduce((acc, s) => acc + s.minutes, 0);
+      els.totalTimeSaved.textContent = fmtMinutes(totalMinutes);
+
+      const top = withMinutes
+        .filter((s) => s.minutes > 0)
+        .sort((a, b) => b.minutes - a.minutes)
+        .slice(0, 5);
+
+      if (!top.length) {
+        els.topSkillsWrap.innerHTML = '<div class="empty" style="padding: 16px;">No invocations parsed yet.</div>';
+        return;
+      }
+
+      const rows = top.map((s, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(s.name)}</td>
+          <td>${s.invocations}</td>
+          <td>${escapeHtml(fmtMinutes(s.minutes))}</td>
+        </tr>
+      `).join('');
+
+      els.topSkillsWrap.innerHTML = `
+        <table class="top-table">
+          <thead>
+            <tr><th>#</th><th>Skill</th><th>Invocations</th><th>Time Saved</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderAll() {
+      renderMetrics();
+      renderHeatmap();
+      renderROI();
+    }
+
+    async function readText(file) {
+      return await file.text();
+    }
+
+    async function handleManifestFiles(files) {
+      const file = files[0];
+      if (!file) return;
+
+      try {
+        const text = await readText(file);
+        const parsed = JSON.parse(text);
+        const skills = Array.isArray(parsed?.skills) ? parsed.skills : null;
+
+        if (!skills) {
+          throw new Error('Manifest must include a skills array.');
+        }
+
+        state.skills = skills.map((entry) => {
+          const name = String(entry?.name || '').trim();
+          return {
+            name,
+            norm: normalize(name),
+            category: String(entry?.category || 'Uncategorized').trim(),
+            installDateRaw: entry?.install_date || null,
+            installDate: entry?.install_date ? new Date(entry.install_date) : null,
+            invocations: 0,
+            lastUsed: null
+          };
+        }).filter((s) => s.name);
+
+        state.index = new Map(state.skills.map((s) => [s.norm, s]));
+        state.files.manifest = file.name;
+
+        els.manifestMeta.innerHTML = `
+          <span>Loaded: <strong>${escapeHtml(file.name)}</strong></span>
+          <span>Skills: <strong>${state.skills.length}</strong></span>
+        `;
+
+        setStatus('Manifest loaded. Recomputing usage from existing log data.');
+        recomputeUsage();
+      } catch (err) {
+        setStatus('Manifest load failed: ' + err.message);
+      }
+    }
+
+    async function handleLogFiles(files) {
+      if (!files.length) return;
+
+      let addedRecords = 0;
+      let parseErrors = 0;
+      const names = [];
+
+      for (const file of files) {
+        names.push(file.name);
+        try {
+          const text = await readText(file);
+          const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+
+          for (const line of lines) {
+            let recObj = null;
+            try {
+              recObj = JSON.parse(line);
+            } catch {
+              parseErrors += 1;
+            }
+
+            const lineLower = line.toLowerCase();
+            let ts = recObj ? extractTimestamp(recObj) : null;
+            if (!ts) ts = extractTimestampFromString(line);
+
+            state.records.push({
+              textLower: lineLower,
+              timestamp: ts
+            });
+            addedRecords += 1;
+          }
+        } catch (err) {
+          setStatus('Failed reading ' + file.name + ': ' + err.message);
+        }
+      }
+
+      state.files.logs.push(...names);
+
+      els.logsMeta.innerHTML = `
+        <span>Files loaded: <strong>${state.files.logs.length}</strong></span>
+        <span>Total records: <strong>${state.records.length}</strong></span>
+      `;
+
+      const parseNote = parseErrors ? ` (${parseErrors} non-JSON lines treated as raw text)` : '';
+      setStatus(`Parsed ${addedRecords} log records${parseNote}.`);
+
+      recomputeUsage();
+    }
+
+    function clearData() {
+      state.skills = [];
+      state.index = new Map();
+      state.records = [];
+      state.files.manifest = null;
+      state.files.logs = [];
+      els.manifestMeta.innerHTML = '';
+      els.logsMeta.innerHTML = '';
+      els.manifestInput.value = '';
+      els.logsInput.value = '';
+      setStatus('Cleared loaded files and computed results.');
+      renderAll();
+    }
+
+    attachDropzone(els.manifestDrop, handleManifestFiles);
+    attachDropzone(els.logsDrop, handleLogFiles);
+
+    els.manifestInput.addEventListener('change', (e) => handleManifestFiles(Array.from(e.target.files || [])));
+    els.logsInput.addEventListener('change', (e) => handleLogFiles(Array.from(e.target.files || [])));
+    els.clearBtn.addEventListener('click', clearData);
+
+    renderAll();
+  </script>
+</body>
+</html>

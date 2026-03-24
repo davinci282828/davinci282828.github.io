@@ -1,0 +1,12 @@
+{"role":"user","content":"Can you help me with automation?","timestamp":"2026-03-20T14:32:11Z"}
+{"role":"assistant","content":"I'll read the automation-playbook skill.","timestamp":"2026-03-20T14:32:15Z"}
+{"role":"assistant","content":"Reading ~/.openclaw/skills/automation-playbook/SKILL.md","timestamp":"2026-03-20T14:32:18Z"}
+{"role":"user","content":"What about browser testing?","timestamp":"2026-03-21T09:15:42Z"}
+{"role":"assistant","content":"Let me check the browser-qa skill for that.","timestamp":"2026-03-21T09:15:47Z"}
+{"role":"assistant","content":"Looking at ~/.openclaw/skills/browser-qa/SKILL.md now.","timestamp":"2026-03-21T09:15:51Z"}
+{"role":"user","content":"Build me a workflow","timestamp":"2026-03-22T16:20:33Z"}
+{"role":"assistant","content":"I'll use the workflow-builder skill. Reading ~/.openclaw/skills/workflow-builder/SKILL.md","timestamp":"2026-03-22T16:20:39Z"}
+{"role":"user","content":"Review this code","timestamp":"2026-03-23T11:08:15Z"}
+{"role":"assistant","content":"Using code-factory for review. File: ~/.openclaw/skills/code-factory/SKILL.md","timestamp":"2026-03-23T11:08:22Z"}
+{"role":"user","content":"Plan a build","timestamp":"2026-03-24T08:45:09Z"}
+{"role":"assistant","content":"Reading the build-planner skill documentation at ~/.openclaw/skills/build-planner/SKILL.md","timestamp":"2026-03-24T08:45:14Z"}
