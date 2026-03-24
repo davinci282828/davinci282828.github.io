@@ -1,0 +1,234 @@
+{
+  "skills": [
+    {
+      "name": "design-system-generator",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "polymarket-odds",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "build-planner",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "code-factory",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "google-ads-tracking",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "google-ads-negatives",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "meta-ads-report",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "youtube-content-suite",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "agent-memory-architecture",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "mmhc-ops",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "x-twitter-agent",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "workflow-builder",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "homepage-audit",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "google-ads",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "take-the-wheel",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "content-repurposing-engine",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "openclaw-update",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "therapist-bio-optimizer",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "quant-toolbox",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "google-ads-search-terms",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "google-analytics-api",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "polyclaw",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "agent-deep-research",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "google-ads-intent-map",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "mmhc-content-factory",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "skill-capture",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "email-fortress",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "geo-aeo",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "code-health",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "geo-aeo-v1-backup",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "google-ads-audit",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "adaptlypost",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "reddit-growth",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "coding-agent-loops",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "cold-outreach",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "browser-qa",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "ehad-platform-deploy",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "automation-playbook",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "agent-self-reflection",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "agent-ops-playbook",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "awwwards-design",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "youtube-full",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "ai-council",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "firefly",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "charts",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    },
+    {
+      "name": "bird-twitter",
+      "category": "installed",
+      "install_date": "2026-02-16"
+    }
+  ]
+}
