@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Context Budget Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a30;
+      --panel-2: #17213e;
+      --text: #e8ecff;
+      --muted: #9aa6cf;
+      --safe: #22c55e;
+      --warn: #facc15;
+      --crit: #ef4444;
+      --accent: #60a5fa;
+      --border: #2b375f;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 15% -10%, #1c2a58 0%, transparent 60%),
+                  radial-gradient(900px 500px at 100% 0%, #1a3a63 0%, transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.15rem, 2vw, 1.7rem);
+      letter-spacing: 0.3px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .controls-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1.2fr 1fr;
+    }
+
+    .control-block {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .control-title {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: #c8d0f3;
+      font-weight: 600;
+    }
+
+    .source-toggle {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.88rem;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-pill input {
+      accent-color: var(--accent);
+    }
+
+    textarea,
+    input,
+    select,
+    button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0e1630;
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 165px;
+    }
+
+    button {
+      background: linear-gradient(180deg, #2c4f92, #243f73);
+      border: 1px solid #4367aa;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.3;
+    }
+
+    .status {
+      margin-top: 8px;
+      min-height: 20px;
+      font-size: 0.88rem;
+      color: #c9d3f7;
+    }
+
+    .status.error {
+      color: #fca5a5;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+    }
+
+    .stat .value {
+      font-size: 1.18rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      overflow-wrap: anywhere;
+    }
+
+    .zone-wrap {
+      margin-top: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .zone-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .zone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .zone-safe {
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.45);
+    }
+
+    .zone-warning {
+      background: rgba(250, 204, 21, 0.12);
+      color: #fde68a;
+      border: 1px solid rgba(250, 204, 21, 0.45);
+    }
+
+    .zone-critical {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fecaca;
+      border: 1px solid rgba(239, 68, 68, 0.45);
+    }
+
+    .zone-message {
+      margin: 8px 0 0;
+      color: #d5dcf9;
+      font-size: 0.9rem;
+    }
+
+    .progress {
+      margin-top: 10px;
+      height: 12px;
+      border-radius: 999px;
+      background: #0d1430;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      transition: width 180ms ease;
+    }
+
+    .chart-wrap {
+      height: 380px;
+      min-height: 280px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    @media (max-width: 1100px) {
+      .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .row-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        padding: 10px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-wrap {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="panel">
+      <h1>Agent Context Budget Tracker</h1>
+      <p class="subtitle">Monitor cumulative input/output tokens, context utilization, cost, and growth over message count.</p>
+    </section>
+
+    <section class="panel">
+      <div class="controls-grid">
+        <div class="control-block">
+          <p class="control-title">1) Choose token source</p>
+          <div class="source-toggle">
+            <label class="toggle-pill"><input type="radio" name="source" value="json" checked /> Session JSON</label>
+            <label class="toggle-pill"><input type="radio" name="source" value="manual" /> Manual totals</label>
+          </div>
+
+          <textarea id="jsonInput" placeholder='Paste JSON from openclaw sessions --active 60 --json'></textarea>
+          <button id="parseBtn" type="button">Parse JSON</button>
+          <div class="hint">Accepted shapes: object/array with <code>messages</code>, <code>events</code>, or token fields such as <code>input_tokens</code>, <code>output_tokens</code>, <code>usage.*</code>.</div>
+          <div id="jsonStatus" class="status">No JSON parsed yet.</div>
+        </div>
+
+        <div class="control-block">
+          <p class="control-title">2) Settings and manual fallback</p>
+          <div class="row">
+            <div>
+              <label for="manualInput">Manual input tokens</label>
+              <input id="manualInput" type="number" min="0" step="1" value="0" />
+            </div>
+            <div>
+              <label for="manualOutput">Manual output tokens</label>
+              <input id="manualOutput" type="number" min="0" step="1" value="0" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="modelSelect">Pricing model</label>
+              <select id="modelSelect"></select>
+            </div>
+            <div>
+              <label for="limitInput">Context limit (tokens)</label>
+              <input id="limitInput" type="number" min="1" step="1" value="1000000" />
+            </div>
+          </div>
+
+          <div class="hint">Costs are estimated from per-million token rates by selected model. Switch to Manual mode to enter current cumulative totals directly.</div>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="margin-top: 12px;">
+        <article class="stat"><div class="label">Input Tokens</div><div id="inputTokens" class="value">0</div></article>
+        <article class="stat"><div class="label">Output Tokens</div><div id="outputTokens" class="value">0</div></article>
+        <article class="stat"><div class="label">Total Tokens</div><div id="totalTokens" class="value">0</div></article>
+        <article class="stat"><div class="label">Used %</div><div id="percentUsed" class="value">0%</div></article>
+        <article class="stat"><div class="label">Remaining</div><div id="remainingTokens" class="value">1,000,000</div></article>
+        <article class="stat"><div class="label">Estimated Cost</div><div id="costEstimate" class="value">$0.00</div></article>
+      </div>
+
+      <div class="zone-wrap">
+        <div class="zone-top">
+          <strong>Context Zone</strong>
+          <span id="zoneBadge" class="zone-badge zone-safe">SAFE</span>
+        </div>
+        <p id="zoneMessage" class="zone-message">Plenty of context budget available.</p>
+        <div class="progress"><span id="progressBar"></span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="control-title" style="margin-bottom: 10px;">Token Accumulation Over Time (Message Count vs Cumulative Tokens)</p>
+      <div class="chart-wrap">
+        <canvas id="tokenChart"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const MODEL_PRICING = {
+      "Claude Opus 4": { input: 15, output: 75 },
+      "Claude Sonnet 4.5": { input: 3, output: 15 },
+      "Kimi K2.5": { input: 0.30, output: 1.20 },
+      "GPT-4o": { input: 2.50, output: 10 },
+      "Llama 3.3 70B": { input: 0.35, output: 0.40 }
+    };
+
+    const els = {
+      sourceRadios: () => [...document.querySelectorAll('input[name="source"]')],
+      jsonInput: document.getElementById('jsonInput'),
+      parseBtn: document.getElementById('parseBtn'),
+      jsonStatus: document.getElementById('jsonStatus'),
+      manualInput: document.getElementById('manualInput'),
+      manualOutput: document.getElementById('manualOutput'),
+      modelSelect: document.getElementById('modelSelect'),
+      limitInput: document.getElementById('limitInput'),
+      inputTokens: document.getElementById('inputTokens'),
+      outputTokens: document.getElementById('outputTokens'),
+      totalTokens: document.getElementById('totalTokens'),
+      percentUsed: document.getElementById('percentUsed'),
+      remainingTokens: document.getElementById('remainingTokens'),
+      costEstimate: document.getElementById('costEstimate'),
+      zoneBadge: document.getElementById('zoneBadge'),
+      zoneMessage: document.getElementById('zoneMessage'),
+      progressBar: document.getElementById('progressBar'),
+      chartCanvas: document.getElementById('tokenChart')
+    };
+
+    const state = {
+      source: 'json',
+      parsed: { input: 0, output: 0, points: [0], messages: 0, valid: false }
+    };
+
+    const numberFmt = new Intl.NumberFormat('en-US');
+
+    function initModels() {
+      Object.entries(MODEL_PRICING).forEach(([name, rates], idx) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = `${name} (in $${rates.input}/M, out $${rates.output}/M)`;
+        if (idx === 0) opt.selected = true;
+        els.modelSelect.appendChild(opt);
+      });
+    }
+
+    function readPath(obj, path) {
+      return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
+    }
+
+    function toNumber(value) {
+      if (typeof value === 'number' && Number.isFinite(value)) return value;
+      if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) return Number(value);
+      return null;
+    }
+
+    function getNumberFromCandidates(obj, candidates) {
+      for (const key of candidates) {
+        const val = readPath(obj, key);
+        const n = toNumber(val);
+        if (n !== null) return n;
+      }
+      return null;
+    }
+
+    function looksTokenLike(obj) {
+      if (!obj || typeof obj !== 'object') return false;
+      const keys = Object.keys(obj);
+      return keys.some(k => /token|usage|prompt|completion|input|output/i.test(k));
+    }
+
+    function findMessages(node, depth = 0) {
+      if (depth > 7 || node == null) return null;
+
+      if (Array.isArray(node)) {
+        if (node.length > 0 && node.some(item => looksTokenLike(item))) return node;
+        for (const item of node) {
+          const found = findMessages(item, depth + 1);
+          if (found) return found;
+        }
+        return null;
+      }
+
+      if (typeof node === 'object') {
+        if (Array.isArray(node.messages)) return node.messages;
+        const priorityArrays = ['events', 'turns', 'history', 'items', 'conversation', 'data'];
+        for (const key of priorityArrays) {
+          if (Array.isArray(node[key]) && node[key].some(item => typeof item === 'object')) {
+            return node[key];
+          }
+        }
+        for (const val of Object.values(node)) {
+          const found = findMessages(val, depth + 1);
+          if (found) return found;
+        }
+      }
+
+      return null;
+    }
+
+    function parseSessionJson(rawText) {
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (err) {
+        return { valid: false, error: `Invalid JSON: ${err.message}` };
+      }
+
+      const inputKeys = [
+        'input_tokens', 'prompt_tokens', 'in_tokens', 'tokens_in',
+        'usage.input_tokens', 'usage.prompt_tokens', 'usage.input',
+        'token_usage.input_tokens', 'token_usage.input', 'metrics.input_tokens',
+        'tokenUsage.inputTokens'
+      ];
+      const outputKeys = [
+        'output_tokens', 'completion_tokens', 'out_tokens', 'tokens_out',
+        'usage.output_tokens', 'usage.completion_tokens', 'usage.output',
+        'token_usage.output_tokens', 'token_usage.output', 'metrics.output_tokens',
+        'tokenUsage.outputTokens'
+      ];
+      const totalKeys = [
+        'total_tokens', 'usage.total_tokens', 'token_usage.total_tokens',
+        'tokenUsage.totalTokens', 'metrics.total_tokens'
+      ];
+
+      const messages = findMessages(data);
+      let runningInput = 0;
+      let runningOutput = 0;
+      const points = [];
+
+      if (messages && messages.length) {
+        messages.forEach((msg) => {
+          const inRaw = getNumberFromCandidates(msg, inputKeys);
+          const outRaw = getNumberFromCandidates(msg, outputKeys);
+          const totalRaw = getNumberFromCandidates(msg, totalKeys);
+
+          let inVal = inRaw;
+          let outVal = outRaw;
+
+          if (inVal === null && outVal === null && totalRaw !== null) {
+            inVal = totalRaw;
+            outVal = 0;
+          }
+
+          inVal = Math.max(0, Math.round(inVal ?? 0));
+          outVal = Math.max(0, Math.round(outVal ?? 0));
+
+          runningInput += inVal;
+          runningOutput += outVal;
+          points.push(runningInput + runningOutput);
+        });
+
+        return {
+          valid: true,
+          input: runningInput,
+          output: runningOutput,
+          points: points.length ? points : [0],
+          messages: messages.length
+        };
+      }
+
+      const fallbackInput = getNumberFromCandidates(data, [
+        'total_input_tokens', 'input_tokens_total', 'usage.total_input_tokens',
+        'usage.input_tokens', 'stats.input_tokens', 'token_usage.input_tokens'
+      ]);
+      const fallbackOutput = getNumberFromCandidates(data, [
+        'total_output_tokens', 'output_tokens_total', 'usage.total_output_tokens',
+        'usage.output_tokens', 'stats.output_tokens', 'token_usage.output_tokens'
+      ]);
+
+      if (fallbackInput !== null || fallbackOutput !== null) {
+        const input = Math.max(0, Math.round(fallbackInput ?? 0));
+        const output = Math.max(0, Math.round(fallbackOutput ?? 0));
+        return {
+          valid: true,
+          input,
+          output,
+          points: [input + output],
+          messages: 1
+        };
+      }
+
+      return {
+        valid: false,
+        error: 'JSON parsed, but no recognizable token fields were found.'
+      };
+    }
+
+    function currentSource() {
+      const selected = els.sourceRadios().find(r => r.checked);
+      return selected ? selected.value : 'json';
+    }
+
+    function getManualMetrics() {
+      const input = Math.max(0, Math.round(Number(els.manualInput.value) || 0));
+      const output = Math.max(0, Math.round(Number(els.manualOutput.value) || 0));
+      return { input, output, points: [input + output], messages: 1, valid: true };
+    }
+
+    function getActiveMetrics() {
+      if (state.source === 'manual') return getManualMetrics();
+      return state.parsed.valid ? state.parsed : { input: 0, output: 0, points: [0], messages: 0, valid: false };
+    }
+
+    function formatCost(value) {
+      if (value < 0.01) return `$${value.toFixed(4)}`;
+      if (value < 1) return `$${value.toFixed(3)}`;
+      return `$${value.toFixed(2)}`;
+    }
+
+    function setZone(percent) {
+      const badge = els.zoneBadge;
+      badge.classList.remove('zone-safe', 'zone-warning', 'zone-critical');
+
+      let color = 'var(--safe)';
+      if (percent > 80) {
+        badge.textContent = 'CRITICAL';
+        badge.classList.add('zone-critical');
+        els.zoneMessage.textContent = 'Critical context usage. Session may need a restart soon to avoid failures.';
+        color = 'var(--crit)';
+      } else if (percent >= 60) {
+        badge.textContent = 'WARNING';
+        badge.classList.add('zone-warning');
+        els.zoneMessage.textContent = 'Approaching context limit. Keep an eye on growth and plan compaction/restart.';
+        color = 'var(--warn)';
+      } else {
+        badge.textContent = 'SAFE';
+        badge.classList.add('zone-safe');
+        els.zoneMessage.textContent = 'Plenty of context budget available.';
+        color = 'var(--safe)';
+      }
+
+      els.progressBar.style.width = `${Math.min(percent, 100)}%`;
+      els.progressBar.style.background = `linear-gradient(90deg, ${color}, ${color})`;
+    }
+
+    let chart;
+    function initChart() {
+      chart = new Chart(els.chartCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: ['1'],
+          datasets: [{
+            label: 'Cumulative Tokens',
+            data: [0],
+            borderColor: '#60a5fa',
+            backgroundColor: 'rgba(96, 165, 250, 0.2)',
+            borderWidth: 2,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            fill: true,
+            tension: 0.25
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#dbe6ff'
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${numberFmt.format(ctx.parsed.y)} tokens`
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Message Count',
+                color: '#9aa6cf'
+              },
+              ticks: { color: '#c5d0f6' },
+              grid: { color: 'rgba(154, 166, 207, 0.18)' }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Cumulative Tokens',
+                color: '#9aa6cf'
+              },
+              ticks: {
+                color: '#c5d0f6',
+                callback: value => numberFmt.format(value)
+              },
+              grid: { color: 'rgba(154, 166, 207, 0.18)' }
+            }
+          }
+        }
+      });
+    }
+
+    function updateChart(points) {
+      const safePoints = Array.isArray(points) && points.length ? points : [0];
+      chart.data.labels = safePoints.map((_, idx) => String(idx + 1));
+      chart.data.datasets[0].data = safePoints;
+      chart.update();
+    }
+
+    function refresh() {
+      state.source = currentSource();
+      const metrics = getActiveMetrics();
+      const input = metrics.input;
+      const output = metrics.output;
+      const total = input + output;
+      const limit = Math.max(1, Math.round(Number(els.limitInput.value) || 1000000));
+      const percent = (total / limit) * 100;
+      const remaining = Math.max(limit - total, 0);
+
+      const modelName = els.modelSelect.value;
+      const rates = MODEL_PRICING[modelName];
+      const cost = (input / 1_000_000) * rates.input + (output / 1_000_000) * rates.output;
+
+      els.inputTokens.textContent = numberFmt.format(input);
+      els.outputTokens.textContent = numberFmt.format(output);
+      els.totalTokens.textContent = numberFmt.format(total);
+      els.percentUsed.textContent = `${percent.toFixed(2)}%`;
+      els.remainingTokens.textContent = numberFmt.format(remaining);
+      els.costEstimate.textContent = formatCost(cost);
+
+      setZone(percent);
+      updateChart(metrics.points);
+
+      els.jsonInput.disabled = state.source !== 'json';
+      els.parseBtn.disabled = state.source !== 'json';
+      els.manualInput.disabled = state.source !== 'manual';
+      els.manualOutput.disabled = state.source !== 'manual';
+    }
+
+    function parseAndRefresh(showSuccess = false) {
+      const text = els.jsonInput.value.trim();
+      if (!text) {
+        state.parsed = { input: 0, output: 0, points: [0], messages: 0, valid: false };
+        els.jsonStatus.classList.remove('error');
+        els.jsonStatus.textContent = 'No JSON parsed yet.';
+        refresh();
+        return;
+      }
+
+      const result = parseSessionJson(text);
+      if (result.valid) {
+        state.parsed = result;
+        els.jsonStatus.classList.remove('error');
+        els.jsonStatus.textContent = `Parsed ${result.messages} message${result.messages === 1 ? '' : 's'} successfully.`;
+        if (showSuccess) {
+          els.jsonStatus.textContent += ' Dashboard updated.';
+        }
+      } else {
+        state.parsed = { input: 0, output: 0, points: [0], messages: 0, valid: false };
+        els.jsonStatus.classList.add('error');
+        els.jsonStatus.textContent = result.error;
+      }
+
+      refresh();
+    }
+
+    function attachEvents() {
+      els.sourceRadios().forEach(r => r.addEventListener('change', refresh));
+      els.manualInput.addEventListener('input', refresh);
+      els.manualOutput.addEventListener('input', refresh);
+      els.modelSelect.addEventListener('change', refresh);
+      els.limitInput.addEventListener('input', refresh);
+      els.parseBtn.addEventListener('click', () => parseAndRefresh(true));
+
+      let timer;
+      els.jsonInput.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => parseAndRefresh(false), 180);
+      });
+    }
+
+    initModels();
+    initChart();
+    attachEvents();
+    refresh();
+  </script>
+</body>
+</html>
