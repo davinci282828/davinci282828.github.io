@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You for Your Referral | Manhattan Mental Health Counseling</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-green: #1A3D2B;
+            --lime-green: #8DC63F;
+            --lime-green-light: #A1E681;
+            --amber-cta: #D97C2A;
+            --cream: #FAF8F5;
+            --warm-white: #FFFFFF;
+            --text-muted: #5A6B5E;
+            --text-light: #FFFFFF;
+            --border-subtle: #E2E0DC;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            color: #1A1A1A;
+            background: var(--cream);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            background: var(--warm-white);
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 14px; }
+
+        .logo-mark {
+            width: 44px; height: 44px;
+            background: var(--forest-green);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--lime-green);
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+        }
+
+        .logo-text { font-size: 15px; font-weight: 600; color: var(--forest-green); line-height: 1.25; }
+        .logo-text span { display: block; font-size: 12px; font-weight: 400; color: var(--text-muted); }
+
+        .header-cta {
+            background: var(--amber-cta); color: white;
+            padding: 10px 24px; border-radius: 8px;
+            text-decoration: none; font-size: 14px; font-weight: 600;
+            transition: background 0.2s;
+        }
+        .header-cta:hover { background: #C26D1F; }
+
+        .hero {
+            background: var(--forest-green);
+            padding: 64px 40px 72px;
+            text-align: center;
+            position: relative; overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute; top: -60%; left: -20%; width: 140%; height: 200%;
+            background: radial-gradient(ellipse at center, rgba(141,198,63,0.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(141,198,63,0.12);
+            border: 1px solid rgba(141,198,63,0.25);
+            border-radius: 100px; padding: 8px 20px; margin-bottom: 24px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .hero-badge .check-icon {
+            width: 20px; height: 20px;
+            background: var(--lime-green); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .hero-badge .check-icon svg { width: 12px; height: 12px; }
+        .hero-badge span { color: var(--lime-green-light); font-size: 14px; font-weight: 600; }
+
+        .hero h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 42px; font-weight: 400;
+            color: var(--text-light); line-height: 1.2;
+            max-width: 600px; margin: 0 auto 16px;
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+        }
+
+        .hero .subtitle {
+            font-size: 18px; color: rgba(255,255,255,0.75);
+            max-width: 480px; margin: 0 auto; line-height: 1.55;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .card-section {
+            max-width: 680px; margin: -36px auto 0;
+            padding: 0 40px; position: relative; z-index: 2;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+
+        .card {
+            background: var(--warm-white); border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(26,61,43,0.08), 0 1px 3px rgba(0,0,0,0.04);
+            padding: 36px 40px;
+        }
+
+        .card h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px; color: var(--forest-green);
+            font-weight: 400; margin-bottom: 20px;
+        }
+
+        .step-item {
+            display: flex; gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .step-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .step-item:first-child { padding-top: 0; }
+
+        .step-number {
+            width: 28px; height: 28px; min-width: 28px;
+            background: rgba(141,198,63,0.12);
+            color: var(--forest-green); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px; margin-top: 1px;
+        }
+
+        .step-content p { font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+        .step-content strong { color: var(--forest-green); font-weight: 600; }
+
+        .proof-bar {
+            max-width: 680px; margin: 24px auto 0; padding: 0 40px;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        .proof-inner { display: flex; justify-content: center; gap: 40px; padding: 16px 0; }
+
+        .proof-stat { text-align: center; }
+        .proof-stat .number {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px; color: var(--forest-green); line-height: 1; margin-bottom: 2px;
+        }
+        .proof-stat .label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+        .refer-again {
+            text-align: center; padding: 20px 40px 56px;
+            animation: fadeInUp 0.6s ease-out 0.5s both;
+        }
+
+        .refer-again a {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--amber-cta); color: white;
+            padding: 14px 32px; border-radius: 10px;
+            text-decoration: none; font-size: 15px; font-weight: 600;
+            transition: background 0.2s;
+        }
+        .refer-again a:hover { background: #C26D1F; }
+        .refer-again a svg { width: 18px; height: 18px; }
+
+        .footer {
+            background: var(--forest-green); padding: 28px 40px; text-align: center;
+        }
+        .footer p { font-size: 13px; color: rgba(255,255,255,0.4); }
+        .footer a { color: rgba(255,255,255,0.5); text-decoration: none; }
+        .footer a:hover { color: var(--lime-green-light); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 14px 20px; }
+            .header-cta { display: none; }
+            .hero { padding: 48px 24px 60px; }
+            .hero h1 { font-size: 30px; }
+            .hero .subtitle { font-size: 16px; }
+            .card-section, .proof-bar { padding: 0 20px; }
+            .card { padding: 28px 24px; }
+            .proof-inner { gap: 24px; }
+            .proof-stat .number { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo-area">
+            <div class="logo-mark">M</div>
+            <div class="logo-text">Manhattan Mental Health Counseling<span>Care Navigation</span></div>
+        </div>
+        <a href="https://manhattanmentalhealthcounseling.com/refer" class="header-cta">Refer Another Patient</a>
+    </header>
+
+    <section class="hero">
+        <div class="hero-badge">
+            <div class="check-icon">
+                <svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <span>Referral Received</span>
+        </div>
+        <h1>Thank You. We'll Take It from Here.</h1>
+        <p class="subtitle">Your patient will hear from our Care Navigation team within 24 hours.</p>
+    </section>
+
+    <section class="card-section">
+        <div class="card">
+            <h2>What Happens Next</h2>
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <p><strong>We contact your patient</strong> to walk them through intake and answer their questions.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <p><strong>We match them with a therapist</strong> based on clinical needs, insurance, and availability.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <p><strong>We confirm back to your office</strong> once they're scheduled.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="proof-bar">
+        <div class="proof-inner">
+            <div class="proof-stat"><div class="number">80+</div><div class="label">Licensed Clinicians</div></div>
+            <div class="proof-stat"><div class="number">24hr</div><div class="label">Patient Contact</div></div>
+            <div class="proof-stat"><div class="number">6+</div><div class="label">Insurances Accepted</div></div>
+        </div>
+    </section>
+
+    <section class="refer-again">
+        <a href="https://manhattanmentalhealthcounseling.com/refer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Refer Another Patient
+        </a>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2026 Manhattan Mental Health Counseling LLC &nbsp;·&nbsp; 303 Fifth Avenue Suite 1108, New York, NY 10016 &nbsp;·&nbsp; <a href="https://manhattanmentalhealthcounseling.com/privacy-policy/">Privacy Notice</a></p>
+    </footer>
+
+</body>
+</html>

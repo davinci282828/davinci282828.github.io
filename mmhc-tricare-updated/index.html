@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Tricare Page — Desktop View (Updated)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1a1a2e; background: #ffffff; width: 1440px; margin: 0 auto; }
+
+  .nav { background: #0d1b2a; padding: 14px 80px; display: flex; justify-content: space-between; align-items: center; }
+  .nav-logo { color: #fff; font-size: 14px; font-weight: 600; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: #c8d6e5; font-size: 13px; text-decoration: none; }
+  .nav-phone { color: #fff; font-size: 13px; }
+
+  .hero { background: linear-gradient(135deg, #0d1b2a 0%, #1b2d4a 100%); padding: 60px 80px; display: flex; gap: 60px; align-items: center; }
+  .hero-content { flex: 1; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(45,136,255,0.15); border: 1px solid rgba(45,136,255,0.3); border-radius: 20px; padding: 6px 14px; margin-bottom: 20px; }
+  .hero-badge span { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
+  .hero-badge .shield { width: 16px; height: 16px; background: #2d88ff; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; }
+  .hero h1 { color: #ffffff; font-size: 44px; line-height: 1.15; font-weight: 700; margin-bottom: 8px; }
+  .hero h1 .highlight { color: #a1e681; }
+  .hero-sub { color: #b0c4de; font-size: 16px; line-height: 1.6; margin-bottom: 28px; max-width: 540px; }
+  .hero-cta { display: inline-block; background: #a1e681; color: #1e4129; padding: 14px 32px; border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none; margin-bottom: 28px; }
+  .hero-stats { display: flex; gap: 32px; margin-top: 10px; }
+  .hero-stat { text-align: center; }
+  .hero-stat .num { color: #fff; font-size: 22px; font-weight: 700; }
+  .hero-stat .label { color: #8faabe; font-size: 12px; margin-top: 2px; }
+  .hero-image { flex: 0 0 420px; height: 340px; border-radius: 12px; overflow: hidden; position: relative; background: linear-gradient(135deg, #1a3a5c, #2a4a6c); display: flex; align-items: center; justify-content: center; }
+  .hero-image-placeholder { color: #5ba3f5; text-align: center; font-size: 13px; line-height: 1.6; padding: 30px; border: 2px dashed rgba(91,163,245,0.3); border-radius: 8px; }
+
+  .insurance-row { background: #effaf3; padding: 16px 80px; display: flex; align-items: center; justify-content: center; gap: 40px; border-bottom: 1px solid #e2e8f0; }
+  .insurance-row span { font-size: 13px; color: #475569; font-weight: 500; }
+  .insurance-badge { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 18px; font-size: 13px; color: #1e293b; font-weight: 600; }
+
+  .copay-banner { background: linear-gradient(90deg, #0d1b2a, #162d50); padding: 40px 80px; display: flex; align-items: center; justify-content: space-between; }
+  .copay-left { display: flex; align-items: center; gap: 24px; }
+  .copay-amount { color: #a1e681; font-size: 56px; font-weight: 800; }
+  .copay-text h3 { color: #fff; font-size: 20px; font-weight: 600; }
+  .copay-text p { color: #cbd5e1; font-size: 14px; margin-top: 4px; }
+  .copay-cta { background: #a1e681; color: #1e4129; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+
+  .bases-section { background: #0d1b2a; padding: 60px 80px; text-align: center; }
+  .bases-section .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .bases-section h2 { color: #fff; font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+  .bases-section h2 .highlight { color: #a1e681; }
+  .bases-section .sub { color: #cbd5e1; font-size: 15px; margin-bottom: 36px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .bases-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+  .base-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 24px 16px; text-align: center; }
+  .base-card .name { color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .base-card .loc { color: #8faabe; font-size: 12px; }
+  .telehealth-bar { background: rgba(161,230,129,0.1); border: 1px solid rgba(161,230,129,0.25); border-radius: 8px; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .telehealth-bar span { color: #a1e681; font-size: 14px; font-weight: 500; }
+  .telehealth-bar a { background: #a1e681; color: #1e4129; padding: 10px 22px; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; }
+
+  .content-section { padding: 60px 80px; background: #fff; }
+  .content-section .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .content-section h2 { font-size: 30px; font-weight: 700; color: #0d1b2a; margin-bottom: 16px; }
+  .content-section p { font-size: 15px; line-height: 1.7; color: #374151; margin-bottom: 16px; max-width: 800px; }
+  .content-section .coverage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .coverage-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #1e4129; }
+  .coverage-item .check { color: #1e4129; font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+  .coverage-item .text { font-size: 14px; color: #374151; line-height: 1.5; }
+  .coverage-item .text strong { color: #0d1b2a; }
+
+  .services-section { padding: 60px 80px; background: #f8fafc; text-align: center; }
+  .services-section .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .services-section h2 { font-size: 30px; font-weight: 700; color: #0d1b2a; margin-bottom: 8px; }
+  .services-section .sub { color: #64748b; font-size: 15px; margin-bottom: 36px; }
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: left; }
+  .service-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 24px; }
+  .service-card h3 { font-size: 16px; font-weight: 700; color: #0d1b2a; margin-bottom: 6px; }
+  .service-card p { font-size: 13px; color: #64748b; line-height: 1.5; }
+
+  .coverage-section { padding: 60px 80px; background: #fff; }
+  .coverage-section .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; text-align: center; }
+  .coverage-section h2 { font-size: 30px; font-weight: 700; color: #0d1b2a; margin-bottom: 8px; text-align: center; }
+  .coverage-section .sub { color: #64748b; font-size: 15px; margin-bottom: 36px; text-align: center; }
+  .plan-cards { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; }
+  .plan-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 24px 28px; }
+  .plan-card h3 { font-size: 17px; font-weight: 700; color: #0d1b2a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .plan-card .tag { background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
+  .plan-detail { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+  .plan-detail:last-child { border-bottom: none; }
+  .plan-detail .label { color: #64748b; }
+  .plan-detail .value { color: #0d1b2a; font-weight: 600; }
+  .plan-cta-row { text-align: center; margin-top: 24px; }
+  .plan-cta-row a { background: #a1e681; color: #1e4129; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; }
+
+  .steps-section { padding: 60px 80px; background: #effaf3; text-align: center; }
+  .steps-section .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .steps-section h2 { font-size: 30px; font-weight: 700; color: #0d1b2a; margin-bottom: 8px; }
+  .steps-section .sub { color: #64748b; font-size: 15px; margin-bottom: 40px; }
+  .steps-grid { display: flex; gap: 32px; justify-content: center; text-align: center; }
+  .step { flex: 1; max-width: 300px; }
+  .step-num { width: 48px; height: 48px; border-radius: 50%; background: #1e4129; color: #fff; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .step h3 { font-size: 17px; font-weight: 700; color: #0d1b2a; margin-bottom: 6px; }
+  .step p { font-size: 13px; color: #64748b; line-height: 1.5; }
+  .steps-cta { margin-top: 32px; }
+  .steps-cta a { background: #a1e681; color: #1e4129; padding: 14px 32px; border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none; }
+
+  .therapists-section { padding: 60px 80px; background: #fff; text-align: center; }
+  .therapists-section .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .therapists-section h2 { font-size: 30px; font-weight: 700; color: #0d1b2a; margin-bottom: 8px; }
+  .therapists-section .sub { color: #64748b; font-size: 15px; margin-bottom: 36px; max-width: 650px; margin-left: auto; margin-right: auto; }
+  .therapist-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: left; max-width: 800px; margin: 0 auto; }
+  .therapist-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; }
+  .therapist-card h3 { font-size: 16px; font-weight: 700; color: #0d1b2a; margin-bottom: 4px; }
+  .therapist-card .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+  .therapist-card .tags span { background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .therapist-card p { font-size: 13px; color: #64748b; line-height: 1.5; }
+
+  .faq-section { padding: 60px 80px; background: #f8fafc; }
+  .faq-section .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; text-align: center; }
+  .faq-section h2 { font-size: 30px; font-weight: 700; color: #0d1b2a; margin-bottom: 8px; text-align: center; }
+  .faq-section .sub { color: #64748b; font-size: 15px; margin-bottom: 36px; text-align: center; }
+  .faq-list { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .faq-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 24px; }
+  .faq-q { font-size: 15px; font-weight: 600; color: #0d1b2a; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .faq-q .arrow { color: #94a3b8; font-size: 18px; }
+
+  .final-cta { background: linear-gradient(135deg, #0d1b2a, #162d50); padding: 60px 80px; text-align: center; }
+  .final-cta .section-label { color: #5ba3f5; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .final-cta h2 { color: #fff; font-size: 30px; font-weight: 700; margin-bottom: 8px; }
+  .final-cta p { color: #e2e8f0; font-size: 15px; margin-bottom: 28px; max-width: 550px; margin-left: auto; margin-right: auto; }
+  .final-cta .cta-row { display: flex; gap: 16px; justify-content: center; }
+  .final-cta .cta-row a { padding: 14px 28px; border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none; }
+  .final-cta .cta-primary { background: #a1e681; color: #1e4129; }
+  .final-cta .cta-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+  .footer { background: #0a1628; padding: 40px 80px 24px; }
+  .footer-top { display: flex; justify-content: space-between; margin-bottom: 24px; }
+  .footer-col h4 { color: #ffffff; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .footer-col a { display: block; color: #e2e8f0; font-size: 13px; margin-bottom: 6px; text-decoration: none; }
+  .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; color: #e2e8f0; font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Manhattan Mental Health Counseling</div>
+  <div class="nav-links">
+    <a href="#">Tricare Insurance</a>
+    <a href="#">Our Therapists</a>
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="nav-phone">&#x260E; 212-960-8626</div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="shield">&#9733;</div>
+      <span>IN-NETWORK TRICARE PROVIDER</span>
+    </div>
+    <h1>TRICARE Therapists<br>in <span class="highlight">New York</span></h1>
+    <p class="hero-sub">Our licensed clinicians accept Tricare Select and Reserve Select for secure, virtual psychotherapy — serving active-duty service members, retirees, Guard and Reserve members, and military families across New York State.</p>
+    <a href="#" class="hero-cta">Verify My TRICARE Coverage</a>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">$0</div><div class="label">Active Duty Copay</div></div>
+      <div class="hero-stat"><div class="num">100+</div><div class="label">Licensed Therapists</div></div>
+    </div>
+  </div>
+  <div class="hero-image">
+    <div class="hero-image-placeholder">
+      HERO IMAGE PLACEHOLDER
+    </div>
+  </div>
+</section>
+
+<div class="insurance-row">
+  <span>We Accept:</span>
+  <div class="insurance-badge">&#x2714; Tricare Select</div>
+  <div class="insurance-badge">&#x2714; Tricare Reserve Select</div>
+  <span style="color: #94a3b8;">|</span>
+  <span>Verified before your first session — no surprises</span>
+</div>
+
+<section class="bases-section">
+  <div class="section-label">SERVING NEW YORK'S MILITARY COMMUNITY</div>
+  <h2>Military Bases We Serve in <span class="highlight">New York</span></h2>
+  <p class="sub">In-network TRICARE therapy for every military installation in New York State — plus statewide telehealth access wherever you're stationed.</p>
+  <div class="bases-grid">
+    <div class="base-card">
+      <div class="name">Fort Hamilton</div>
+      <div class="loc">Brooklyn, NY</div>
+    </div>
+    <div class="base-card">
+      <div class="name">Fort Drum</div>
+      <div class="loc">Watertown, NY</div>
+    </div>
+    <div class="base-card">
+      <div class="name">West Point (USMA)</div>
+      <div class="loc">West Point, NY</div>
+    </div>
+    <div class="base-card">
+      <div class="name">Camp Smith</div>
+      <div class="loc">Cortlandt Manor, NY</div>
+    </div>
+  </div>
+  <div class="telehealth-bar">
+    <span>&#x1F4F1; Statewide Telehealth — Wherever You're Stationed</span>
+    <a href="#">Get Matched with a Therapist</a>
+  </div>
+</section>
+
+<section class="copay-banner">
+  <div class="copay-left">
+    <div class="copay-amount">$0</div>
+    <div class="copay-text">
+      <h3>Active Duty Family Copay</h3>
+      <p>Tricare Select Group A — in-network outpatient behavioral health visits</p>
+    </div>
+  </div>
+  <a href="#" class="copay-cta">Verify Your Copay &rarr;</a>
+</section>
+
+<section class="content-section">
+  <div class="section-label">COVERAGE OVERVIEW</div>
+  <h2>Does TRICARE Cover Mental Health?</h2>
+  <p>Yes. Tricare covers outpatient mental health services, including individual psychotherapy, when medically necessary. Coverage applies to all Tricare-eligible beneficiaries — active-duty service members, retirees, and dependents enrolled in Tricare Select or Tricare Reserve Select.</p>
+  <p>When you see an in-network Tricare therapist, sessions are covered subject to your plan's copay and deductible requirements. Our Therapy Coordinator verifies your specific coverage before your first appointment.</p>
+  <div class="coverage-grid">
+    <div class="coverage-item">
+      <div class="check">&#x2713;</div>
+      <div class="text"><strong>Conditions Covered by TRICARE</strong> — anxiety, depression, PTSD, military sexual trauma, deployment stress</div>
+    </div>
+    <div class="coverage-item">
+      <div class="check">&#x2713;</div>
+      <div class="text"><strong>Active Duty Family (Group A)</strong> — typically $0 copay for in-network behavioral health</div>
+    </div>
+    <div class="coverage-item">
+      <div class="check">&#x2713;</div>
+      <div class="text"><strong>Retirees & Dependents (Group B)</strong> — approximately 25% cost-share after deductible</div>
+    </div>
+    <div class="coverage-item">
+      <div class="check">&#x2713;</div>
+      <div class="text"><strong>Telehealth = In-Person Rates</strong> — covered at the same rate as face-to-face visits</div>
+    </div>
+    <div class="coverage-item">
+      <div class="check">&#x2713;</div>
+      <div class="text"><strong>Reserve Select (TRS)</strong> — 20% cost-share after $150/$300 deductible</div>
+    </div>
+    <div class="coverage-item">
+      <div class="check">&#x2713;</div>
+      <div class="text"><strong>Catastrophic Cap</strong> — annual out-of-pocket maximum protects against high costs</div>
+    </div>
+  </div>
+</section>
+
+<section class="services-section">
+  <div class="section-label">WHAT WE TREAT</div>
+  <h2>Mental Health Services for Military Families</h2>
+  <p class="sub">Evidence-based treatment from therapists who understand military culture — not just the diagnosis.</p>
+  <div class="services-grid">
+    <div class="service-card">
+      <h3>PTSD & Combat Trauma</h3>
+      <p>CBT, EMDR, and trauma-focused interventions aligned with VA/DoD Clinical Practice Guidelines.</p>
+    </div>
+    <div class="service-card">
+      <h3>Military Sexual Trauma</h3>
+      <p>Specialized treatment for MST with clinicians trained in trauma-sensitive approaches.</p>
+    </div>
+    <div class="service-card">
+      <h3>Anxiety & Depression</h3>
+      <p>Generalized anxiety, panic disorder, major depressive disorder, and persistent mood conditions.</p>
+    </div>
+    <div class="service-card">
+      <h3>Deployment Stress & Reintegration</h3>
+      <p>Hypervigilance, emotional numbing, sleep disturbance, and readjustment after deployment or PCS moves.</p>
+    </div>
+    <div class="service-card">
+      <h3>Career Transitions</h3>
+      <p>Support for the shift from military to civilian employment — identity, purpose, and practical adjustment.</p>
+    </div>
+    <div class="service-card">
+      <h3>Military Family Therapy</h3>
+      <p>Relationship strain from separations, relocations, and the unique pressures of dual-military dynamics.</p>
+    </div>
+  </div>
+</section>
+
+<section class="coverage-section">
+  <div class="section-label">PLAN DETAILS</div>
+  <h2>TRICARE Coverage Details</h2>
+  <p class="sub">Know exactly what you'll pay before your first session. We verify everything upfront.</p>
+  <div class="plan-cards">
+    <div class="plan-card">
+      <h3>TRICARE Select — Active Duty <span class="tag">Group A</span></h3>
+      <div class="plan-detail"><span class="label">In-Network Copay</span><span class="value">$0</span></div>
+      <div class="plan-detail"><span class="label">Annual Deductible</span><span class="value">$150 / $300 family</span></div>
+      <div class="plan-detail"><span class="label">Referral Required</span><span class="value">No</span></div>
+      <div class="plan-detail"><span class="label">Catastrophic Cap</span><span class="value">$1,000 / year</span></div>
+    </div>
+    <div class="plan-card">
+      <h3>TRICARE Select — Retirees <span class="tag">Group B</span></h3>
+      <div class="plan-detail"><span class="label">Cost-Share</span><span class="value">~25%</span></div>
+      <div class="plan-detail"><span class="label">Annual Deductible</span><span class="value">$150–$350</span></div>
+      <div class="plan-detail"><span class="label">Referral Required</span><span class="value">No</span></div>
+      <div class="plan-detail"><span class="label">Catastrophic Cap</span><span class="value">$3,500–$4,000 / year</span></div>
+    </div>
+    <div class="plan-card">
+      <h3>TRICARE Reserve Select <span class="tag">TRS</span></h3>
+      <div class="plan-detail"><span class="label">Cost-Share</span><span class="value">~20%</span></div>
+      <div class="plan-detail"><span class="label">Annual Deductible</span><span class="value">$150 / $300 family</span></div>
+      <div class="plan-detail"><span class="label">Monthly Premium</span><span class="value">~$50.59 / ~$207.69 family</span></div>
+      <div class="plan-detail"><span class="label">Catastrophic Cap</span><span class="value">$1,000 / year</span></div>
+    </div>
+  </div>
+  <div class="plan-cta-row">
+    <a href="#">Check Your Coverage &rarr;</a>
+  </div>
+</section>
+
+<section class="steps-section">
+  <div class="section-label">HOW IT WORKS</div>
+  <h2>Start Therapy in 3 Steps</h2>
+  <p class="sub">Skip the paperwork. MMHC's military-experienced Therapy Coordinator handles everything.</p>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Verify Coverage</h3>
+      <p>Our coordinator confirms your Tricare eligibility, copay, and deductible status before scheduling.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Get Matched</h3>
+      <p>We pair you with a licensed therapist experienced in military-specific concerns and your clinical needs.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Start Therapy</h3>
+      <p>Attend your first session via secure, HIPAA-compliant video — from home, office, or anywhere in NY.</p>
+    </div>
+  </div>
+  <div class="steps-cta">
+    <a href="#">Verify My TRICARE Coverage</a>
+  </div>
+</section>
+
+<section class="therapists-section">
+  <div class="section-label">OUR CLINICAL TEAM</div>
+  <h2>Therapists Who Understand Military Life</h2>
+  <p class="sub">MMHC's military-experienced clinicians specialize in evidence-based trauma treatment, deployment stress, and the unique pressures of service life.</p>
+  <div class="therapist-grid">
+    <div class="therapist-card">
+      <h3>PTSD & Combat Trauma</h3>
+      <div class="tags"><span>CBT</span><span>EMDR</span><span>TF-CBT</span></div>
+      <p>Evidence-based interventions aligned with VA/DoD Clinical Practice Guidelines.</p>
+    </div>
+    <div class="therapist-card">
+      <h3>Military Sexual Trauma (MST)</h3>
+      <div class="tags"><span>Trauma-focused</span><span>HIPAA-secure</span></div>
+      <p>Private telehealth alternative for those who prefer not to seek care on-base.</p>
+    </div>
+    <div class="therapist-card">
+      <h3>Deployment Stress & Reintegration</h3>
+      <div class="tags"><span>Adjustment</span><span>Family systems</span></div>
+      <p>Hypervigilance, emotional numbing, sleep disturbance, and readjustment support.</p>
+    </div>
+    <div class="therapist-card">
+      <h3>Military-to-Civilian Transitions</h3>
+      <div class="tags"><span>Identity</span><span>Career</span><span>Purpose</span></div>
+      <p>Navigating the shift from structured military life to civilian employment and community.</p>
+    </div>
+  </div>
+</section>
+
+<section class="faq-section">
+  <div class="section-label">COMMON QUESTIONS</div>
+  <h2>Frequently Asked Questions</h2>
+  <p class="sub">Answers to the most common questions about Tricare mental health coverage and therapy at MMHC.</p>
+  <div class="faq-list">
+    <div class="faq-item"><div class="faq-q">Does TRICARE cover mental health? <span class="arrow">&#x25BC;</span></div></div>
+    <div class="faq-item"><div class="faq-q">Does TRICARE Select cover mental health? <span class="arrow">&#x25BC;</span></div></div>
+    <div class="faq-item"><div class="faq-q">Does TRICARE cover mental health for dependents? <span class="arrow">&#x25BC;</span></div></div>
+    <div class="faq-item"><div class="faq-q">What is the TRICARE mental health copay? <span class="arrow">&#x25BC;</span></div></div>
+    <div class="faq-item"><div class="faq-q">How do I find a TRICARE therapist in New York? <span class="arrow">&#x25BC;</span></div></div>
+    <div class="faq-item"><div class="faq-q">Is online therapy covered by TRICARE? <span class="arrow">&#x25BC;</span></div></div>
+    <div class="faq-item"><div class="faq-q">Does TRICARE cover therapy for PTSD? <span class="arrow">&#x25BC;</span></div></div>
+    <div class="faq-item"><div class="faq-q">Can I use TRICARE for couples therapy? <span class="arrow">&#x25BC;</span></div></div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="section-label">READY TO START?</div>
+  <h2>Your Service Deserves Dedicated Support</h2>
+  <p>Coverage verified. Matched with a military-experienced therapist. First session within days, not weeks.</p>
+  <div class="cta-row">
+    <a href="#" class="cta-primary">Verify My TRICARE Coverage</a>
+    <a href="#" class="cta-secondary">&#x260E; 212-960-8626</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-col">
+      <h4>Manhattan Mental Health Counseling</h4>
+      <a href="#">About Us</a>
+      <a href="#">Our Therapists</a>
+      <a href="#">Insurance</a>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <a href="#">Anxiety Therapy</a>
+      <a href="#">Depression Therapy</a>
+      <a href="#">PTSD & Trauma</a>
+    </div>
+    <div class="footer-col">
+      <h4>TRICARE</h4>
+      <a href="#">Tricare Select</a>
+      <a href="#">Tricare Reserve Select</a>
+      <a href="#">Coverage Verification</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a href="#">212-960-8626</a>
+      <a href="#">Contact Form</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    Manhattan Mental Health Counseling &copy; 2026
+  </div>
+</footer>
+
+</body>
+</html>
