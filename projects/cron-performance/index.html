@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw Cron Performance Analyzer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171b22;
+      --panel-soft: #1f2530;
+      --text: #e6edf3;
+      --muted: #9aa7b3;
+      --accent: #5aa9ff;
+      --ok: #40d67a;
+      --error: #ff5f6d;
+      --running: #ffd166;
+      --border: #2a3342;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0.3px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+    .topbar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+    select, button {
+      background: #12171f;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+    }
+    button { cursor: pointer; }
+    #dropzone {
+      border: 1px dashed #3d4b61;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      color: var(--muted);
+      background: #12161d;
+      transition: all .15s ease;
+      cursor: pointer;
+    }
+    #dropzone.dragover {
+      border-color: var(--accent);
+      color: #d5e9ff;
+      background: #172131;
+    }
+    .dashboard {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 220px;
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    #heatmapCard { grid-column: span 7; overflow-x: auto; }
+    #statusCard { grid-column: span 5; }
+    #failureCard { grid-column: span 7; }
+    #modelCard { grid-column: span 5; }
+
+    .heatmap {
+      width: max-content;
+      border-collapse: collapse;
+      user-select: none;
+    }
+    .heatmap th,
+    .heatmap td {
+      border: 1px solid #283344;
+      text-align: center;
+      font-size: 10px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      position: relative;
+    }
+    .heatmap th.day {
+      width: 42px;
+      font-size: 11px;
+      color: var(--muted);
+      background: #121720;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+    }
+    .heatmap th.hour {
+      color: var(--muted);
+      background: #121720;
+      font-size: 9px;
+    }
+    .heat-cell {
+      cursor: default;
+      transition: transform .08s ease;
+    }
+    .heat-cell:hover { transform: scale(1.05); }
+    .heat-cell.selected-job {
+      outline: 2px solid #ffb86c;
+      outline-offset: -2px;
+      z-index: 2;
+    }
+
+    table.jobs {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+    .jobs th, .jobs td {
+      border-bottom: 1px solid #263043;
+      padding: 8px 6px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+    .jobs th {
+      color: var(--muted);
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    .jobs tr:hover { background: #1a202b; }
+    .jobs tr.selected {
+      background: #202a3b;
+      outline: 1px solid #ffb86c;
+      outline-offset: -1px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .dot-ok { background: var(--ok); }
+    .dot-error { background: var(--error); }
+    .dot-running { background: var(--running); }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .pill {
+      border: 1px solid #38465c;
+      border-radius: 999px;
+      padding: 4px 9px;
+      background: #111721;
+    }
+    .pill.alert {
+      border-color: #75434a;
+      color: #ffb3bb;
+      background: #2a1619;
+    }
+    #tooltip {
+      position: fixed;
+      pointer-events: none;
+      display: none;
+      max-width: 340px;
+      z-index: 999;
+      background: #0d121a;
+      border: 1px solid #40506a;
+      color: #dce7f2;
+      font-size: 12px;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 10px 20px rgba(0,0,0,.35);
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 1050px) {
+      #heatmapCard, #statusCard, #failureCard, #modelCard { grid-column: span 12; }
+      .jobs th, .jobs td { max-width: 130px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>Cron Performance Analyzer</h1>
+        <div class="sub" id="datasetLabel">Loaded: Sample data</div>
+      </div>
+      <div class="controls">
+        <label>Status
+          <select id="statusFilter">
+            <option value="all">Show all</option>
+            <option value="errors">Show errors only</option>
+          </select>
+        </label>
+        <label>Model
+          <select id="modelFilter">
+            <option value="all">All models</option>
+          </select>
+        </label>
+        <button id="clearSelection">Clear job highlight</button>
+      </div>
+      <div id="dropzone">Drop <code>openclaw cron list --json</code> file here, or click to load</div>
+      <input type="file" id="fileInput" accept="application/json,.json" style="display:none" />
+    </div>
+
+    <div class="dashboard">
+      <section class="card" id="heatmapCard">
+        <h2>Schedule Density Heatmap</h2>
+        <div id="heatmapWrap"></div>
+      </section>
+
+      <section class="card" id="statusCard">
+        <h2>Job Status Overview</h2>
+        <div style="max-height: 420px; overflow:auto;">
+          <table class="jobs" id="jobsTable">
+            <thead>
+              <tr>
+                <th data-sort="name">Name</th>
+                <th data-sort="status">Status</th>
+                <th data-sort="nextRun">Next Run</th>
+                <th>Model</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="failureCard">
+        <h2>Failure Pattern Timeline (7 days)</h2>
+        <canvas id="failureCanvas" height="115"></canvas>
+        <div class="meta" id="failureMeta"></div>
+      </section>
+
+      <section class="card" id="modelCard">
+        <h2>Model Usage Breakdown</h2>
+        <canvas id="modelCanvas" height="115"></canvas>
+        <div class="meta" id="modelMeta"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="tooltip"></div>
+
+  <script>
+    const SAMPLE_DATA = {
+      jobs: [
+        {
+          id: "job-001",
+          name: "Daily Summary Report",
+          schedule: "15 6 * * 1-5",
+          status: "ok",
+          model: "gpt-4o-mini",
+          target: "reports/daily-summary",
+          agent_id: "agent-fin-01",
+          last_run_time: "2026-03-25T06:15:01Z",
+          next_run_time: "2026-03-26T06:15:00Z",
+          history: [
+            { timestamp: "2026-03-22T06:15:00Z", status: "ok" },
+            { timestamp: "2026-03-23T06:15:00Z", status: "ok" },
+            { timestamp: "2026-03-24T06:15:00Z", status: "ok" },
+            { timestamp: "2026-03-25T06:15:00Z", status: "ok" }
+          ]
+        },
+        {
+          id: "job-002",
+          name: "Vector Index Refresh",
+          schedule: "0 */4 * * *",
+          status: "running",
+          model: "claude-3.5-sonnet",
+          target: "search/reindex",
+          agent_id: "agent-search-03",
+          last_run_time: "2026-03-26T04:00:00Z",
+          next_run_time: "2026-03-26T08:00:00Z",
+          history: [
+            { timestamp: "2026-03-24T00:00:00Z", status: "ok" },
+            { timestamp: "2026-03-24T04:00:00Z", status: "ok" },
+            { timestamp: "2026-03-25T00:00:00Z", status: "ok" },
+            { timestamp: "2026-03-26T04:00:00Z", status: "running" }
+          ]
+        },
+        {
+          id: "job-003",
+          name: "Billing Reconciliation",
+          schedule: "30 2 * * *",
+          status: "error",
+          model: "gpt-4.1",
+          target: "finance/reconcile",
+          agent_id: "agent-fin-02",
+          last_run_time: "2026-03-26T02:30:00Z",
+          next_run_time: "2026-03-27T02:30:00Z",
+          history: [
+            { timestamp: "2026-03-20T02:30:00Z", status: "error" },
+            { timestamp: "2026-03-21T02:30:00Z", status: "error" },
+            { timestamp: "2026-03-22T02:30:00Z", status: "ok" },
+            { timestamp: "2026-03-24T02:30:00Z", status: "error" },
+            { timestamp: "2026-03-25T02:30:00Z", status: "error" },
+            { timestamp: "2026-03-26T02:30:00Z", status: "error" }
+          ]
+        },
+        {
+          id: "job-004",
+          name: "Agent Heartbeat Audit",
+          schedule: "*/30 * * * *",
+          status: "ok",
+          model: "gpt-4o-mini",
+          target: "ops/heartbeat-check",
+          agent_id: "agent-ops-09",
+          last_run_time: "2026-03-26T05:00:00Z",
+          next_run_time: "2026-03-26T05:30:00Z",
+          history: [
+            { timestamp: "2026-03-24T00:00:00Z", status: "ok" },
+            { timestamp: "2026-03-25T00:00:00Z", status: "ok" },
+            { timestamp: "2026-03-26T00:00:00Z", status: "ok" }
+          ]
+        },
+        {
+          id: "job-005",
+          name: "Customer Churn Predictor",
+          schedule: "0 9 * * 1,3,5",
+          status: "error",
+          model: "gpt-4.1",
+          target: "ml/churn-score",
+          agent_id: "agent-ml-04",
+          last_run_time: "2026-03-25T09:00:00Z",
+          next_run_time: "2026-03-27T09:00:00Z",
+          history: [
+            { timestamp: "2026-03-20T09:00:00Z", status: "error" },
+            { timestamp: "2026-03-22T09:00:00Z", status: "error" },
+            { timestamp: "2026-03-24T09:00:00Z", status: "error" },
+            { timestamp: "2026-03-25T09:00:00Z", status: "error" }
+          ]
+        },
+        {
+          id: "job-006",
+          name: "Weekly Drift Detection",
+          schedule: "45 11 * * 2",
+          status: "ok",
+          model: "llama-3.1-70b",
+          target: "ml/drift-detection",
+          agent_id: "agent-ml-01",
+          last_run_time: "2026-03-24T11:45:00Z",
+          next_run_time: "2026-03-31T11:45:00Z",
+          history: [
+            { timestamp: "2026-03-17T11:45:00Z", status: "ok" },
+            { timestamp: "2026-03-24T11:45:00Z", status: "ok" }
+          ]
+        }
+      ]
+    };
+
+    const state = {
+      jobs: [],
+      filtered: [],
+      selectedJobId: null,
+      sort: { key: 'name', dir: 1 },
+      charts: { failure: null, model: null },
+      sourceLabel: 'Sample data'
+    };
+
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const statusOrder = { error: 0, running: 1, ok: 2, unknown: 3 };
+
+    function normalizeStatus(s) {
+      const v = String(s || '').toLowerCase();
+      if (v.includes('error') || v.includes('fail')) return 'error';
+      if (v.includes('run') || v.includes('progress')) return 'running';
+      if (v.includes('ok') || v.includes('success') || v.includes('done')) return 'ok';
+      return v || 'unknown';
+    }
+
+    function parseDate(x) {
+      if (!x) return null;
+      const d = new Date(x);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function normalizeJobs(raw) {
+      const arr = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.jobs)
+          ? raw.jobs
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : Array.isArray(raw?.crons)
+              ? raw.crons
+              : [];
+
+      return arr.map((j, idx) => {
+        const id = String(j.id ?? j.job_id ?? j.uuid ?? `job-${idx + 1}`);
+        const name = String(j.name ?? j.job_name ?? `Job ${idx + 1}`);
+        
+        // Handle schedule as object or string
+        let schedule = '';
+        if (typeof j.schedule === 'object' && j.schedule !== null) {
+          if (j.schedule.kind === 'cron') {
+            schedule = j.schedule.expr || '';
+          } else if (j.schedule.kind === 'every') {
+            const everyMs = j.schedule.everyMs || 0;
+            const everyMin = Math.floor(everyMs / 60000);
+            if (everyMin < 60) {
+              schedule = `*/${everyMin} * * * *`;
+            } else {
+              const everyHours = Math.floor(everyMin / 60);
+              schedule = `0 */${everyHours} * * *`;
+            }
+          }
+        } else {
+          schedule = String(j.schedule ?? j.cron ?? j.cron_expression ?? j.spec ?? '');
+        }
+        
+        const state = j.state || {};
+        const status = normalizeStatus(state.lastRunStatus ?? state.lastStatus ?? j.status);
+        
+        let lastRun = null;
+        let nextRun = null;
+        
+        if (state.lastRunAtMs) {
+          lastRun = new Date(state.lastRunAtMs).toISOString();
+        } else if (j.last_run_time || j.last_run || j.lastRun) {
+          lastRun = j.last_run_time ?? j.last_run ?? j.lastRun;
+        }
+        
+        if (state.nextRunAtMs) {
+          nextRun = new Date(state.nextRunAtMs).toISOString();
+        } else if (j.next_run_time || j.next_run || j.nextRun) {
+          nextRun = j.next_run_time ?? j.next_run ?? j.nextRun;
+        }
+        
+        const model = String(j.payload?.model ?? j.model ?? j.model_name ?? j.agent?.model ?? 'unknown');
+        const target = String(j.target ?? j.command ?? j.task ?? j.action ?? 'N/A');
+        const agentId = String(j.agentId ?? j.agent_id ?? j.agent?.id ?? 'N/A');
+        const history = [];
+
+        return {
+          id, name, schedule, status,
+          lastRun,
+          nextRun,
+          model, target, agentId,
+          history,
+          _raw: j
+        };
+      });
+    }
+
+    function ordinalColor(value, max) {
+      if (!max || value <= 0) return 'rgba(30, 39, 53, 0.8)';
+      const a = 0.15 + (value / max) * 0.8;
+      return `rgba(90, 169, 255, ${a.toFixed(3)})`;
+    }
+
+    function range(min, max) {
+      const out = [];
+      for (let i = min; i <= max; i++) out.push(i);
+      return out;
+    }
+
+    function parseCronToken(token, min, max, names = null) {
+      if (!token || token === '*' || token === '?') return range(min, max);
+      const set = new Set();
+      const parts = token.split(',');
+
+      function normalizeValue(v) {
+        const lower = String(v).toLowerCase();
+        if (names && names[lower] !== undefined) return names[lower];
+        const n = Number(v);
+        if (Number.isFinite(n)) return n;
+        return null;
+      }
+
+      for (const part of parts) {
+        const [base, stepPart] = part.split('/');
+        const step = stepPart ? Number(stepPart) : 1;
+        if (!Number.isFinite(step) || step <= 0) continue;
+
+        if (base === '*') {
+          for (let v = min; v <= max; v += step) set.add(v);
+          continue;
+        }
+
+        if (base.includes('-')) {
+          const [aRaw, bRaw] = base.split('-');
+          let a = normalizeValue(aRaw);
+          let b = normalizeValue(bRaw);
+          if (a === null || b === null) continue;
+          if (a > b) [a, b] = [b, a];
+          for (let v = a; v <= b; v += step) {
+            if (v >= min && v <= max) set.add(v);
+          }
+          continue;
+        }
+
+        const n = normalizeValue(base);
+        if (n !== null && n >= min && n <= max) set.add(n);
+      }
+
+      const out = [...set].sort((a,b) => a - b);
+      return out.length ? out : [];
+    }
+
+    function parseScheduleSlots(job) {
+      const schedule = job.schedule || '';
+      const fields = schedule.trim().split(/\s+/);
+      let hourField = null;
+      let dowField = null;
+
+      if (fields.length >= 5) {
+        if (fields.length === 5) {
+          hourField = fields[1];
+          dowField = fields[4];
+        } else {
+          hourField = fields[2];
+          dowField = fields[5] ?? '*';
+        }
+      }
+
+      const dayNames = { sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6 };
+      let hours = hourField ? parseCronToken(hourField, 0, 23) : [];
+      let dows = dowField ? parseCronToken(dowField, 0, 7, dayNames) : [];
+      dows = dows.map(d => d === 7 ? 0 : d);
+
+      if (!hours.length || !dows.length) {
+        const fallback = parseDate(job.nextRun) || parseDate(job.lastRun);
+        if (fallback) return [{ day: fallback.getDay(), hour: fallback.getHours() }];
+        return [];
+      }
+
+      const slots = [];
+      for (const day of dows) {
+        for (const hour of hours) slots.push({ day, hour });
+      }
+      return slots;
+    }
+
+    function formatDate(v) {
+      const d = parseDate(v);
+      if (!d) return '—';
+      return d.toLocaleString();
+    }
+
+    function getErrorEvents(job) {
+      const events = [];
+      for (const h of (job.history || [])) {
+        const st = normalizeStatus(h.status ?? h.state);
+        const ts = parseDate(h.timestamp ?? h.time ?? h.run_at ?? h.executed_at);
+        if (st === 'error' && ts) events.push(ts);
+      }
+      if (!events.length && job.status === 'error') {
+        const ts = parseDate(job.lastRun);
+        if (ts) events.push(ts);
+      }
+      return events;
+    }
+
+    function applyFilters() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      const modelFilter = document.getElementById('modelFilter').value;
+      state.filtered = state.jobs.filter(j => {
+        if (statusFilter === 'errors' && j.status !== 'error') return false;
+        if (modelFilter !== 'all' && j.model !== modelFilter) return false;
+        return true;
+      });
+
+      if (state.selectedJobId && !state.filtered.some(j => j.id === state.selectedJobId)) {
+        state.selectedJobId = null;
+      }
+
+      renderAll();
+    }
+
+    function sortJobs(jobs) {
+      const { key, dir } = state.sort;
+      const out = [...jobs];
+      out.sort((a, b) => {
+        let av, bv;
+        if (key === 'status') {
+          av = statusOrder[a.status] ?? 99;
+          bv = statusOrder[b.status] ?? 99;
+        } else if (key === 'nextRun') {
+          av = parseDate(a.nextRun)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+          bv = parseDate(b.nextRun)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        } else {
+          av = String(a[key] ?? '').toLowerCase();
+          bv = String(b[key] ?? '').toLowerCase();
+        }
+        if (av < bv) return -1 * dir;
+        if (av > bv) return 1 * dir;
+        return 0;
+      });
+      return out;
+    }
+
+    function renderHeatmap() {
+      const wrap = document.getElementById('heatmapWrap');
+      const matrix = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => ({ count: 0, jobs: [] })));
+
+      for (const job of state.filtered) {
+        const slots = parseScheduleSlots(job);
+        const seen = new Set();
+        for (const s of slots) {
+          const k = `${s.day}-${s.hour}`;
+          if (seen.has(k)) continue;
+          seen.add(k);
+          matrix[s.day][s.hour].count += 1;
+          matrix[s.day][s.hour].jobs.push(job);
+        }
+      }
+
+      const max = matrix.flat().reduce((m, c) => Math.max(m, c.count), 0);
+      const table = document.createElement('table');
+      table.className = 'heatmap';
+
+      const thead = document.createElement('thead');
+      const hr = document.createElement('tr');
+      const blank = document.createElement('th');
+      blank.className = 'hour';
+      blank.textContent = 'D/H';
+      hr.appendChild(blank);
+      for (let h = 0; h < 24; h++) {
+        const th = document.createElement('th');
+        th.className = 'hour';
+        th.textContent = h;
+        hr.appendChild(th);
+      }
+      thead.appendChild(hr);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      for (let d = 0; d < 7; d++) {
+        const tr = document.createElement('tr');
+        const dayTh = document.createElement('th');
+        dayTh.className = 'day';
+        dayTh.textContent = days[d];
+        tr.appendChild(dayTh);
+
+        for (let h = 0; h < 24; h++) {
+          const cell = matrix[d][h];
+          const td = document.createElement('td');
+          td.className = 'heat-cell';
+          td.style.backgroundColor = ordinalColor(cell.count, max);
+
+          const selected = state.selectedJobId && cell.jobs.some(j => j.id === state.selectedJobId);
+          if (selected) td.classList.add('selected-job');
+
+          td.dataset.tooltip = cell.jobs.length
+            ? `${days[d]} ${String(h).padStart(2,'0')}:00\n${cell.jobs.map(j => `• ${j.name}`).join('\n')}`
+            : `${days[d]} ${String(h).padStart(2,'0')}:00\nNo scheduled jobs`;
+          td.textContent = cell.count ? cell.count : '';
+          attachTooltip(td);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+
+      table.appendChild(tbody);
+      wrap.innerHTML = '';
+      wrap.appendChild(table);
+    }
+
+    function renderJobsTable() {
+      const tbody = document.querySelector('#jobsTable tbody');
+      const jobs = sortJobs(state.filtered);
+      tbody.innerHTML = '';
+
+      for (const job of jobs) {
+        const tr = document.createElement('tr');
+        if (job.id === state.selectedJobId) tr.classList.add('selected');
+
+        tr.innerHTML = `
+          <td>${escapeHtml(job.name)}</td>
+          <td><span class="status-dot dot-${job.status === 'unknown' ? 'running' : job.status}"></span>${escapeHtml(job.status)}</td>
+          <td>${escapeHtml(formatDate(job.nextRun))}</td>
+          <td>${escapeHtml(job.model)}</td>
+        `;
+
+        tr.addEventListener('click', () => {
+          state.selectedJobId = (state.selectedJobId === job.id) ? null : job.id;
+          renderAll();
+        });
+
+        tr.dataset.tooltip = [
+          `Name: ${job.name}`,
+          `ID: ${job.id}`,
+          `Schedule: ${job.schedule || 'N/A'}`,
+          `Target: ${job.target || 'N/A'}`,
+          `Agent ID: ${job.agentId || 'N/A'}`,
+          `Last Run: ${formatDate(job.lastRun)}`,
+          `Next Run: ${formatDate(job.nextRun)}`
+        ].join('\n');
+        attachTooltip(tr);
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function buildLast7Days() {
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      const arr = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        arr.push(d);
+      }
+      return arr;
+    }
+
+    function dayKey(d) {
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function renderFailureChart() {
+      const canvas = document.getElementById('failureCanvas');
+      const meta = document.getElementById('failureMeta');
+
+      if (!window.Chart) {
+        meta.innerHTML = '<span class="pill alert">Chart.js unavailable: failure chart disabled.</span>';
+        return;
+      }
+
+      const days7 = buildLast7Days();
+      const labels = days7.map(d => `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`);
+      const allMap = new Map(days7.map(d => [dayKey(d), 0]));
+      const selectedMap = new Map(days7.map(d => [dayKey(d), 0]));
+      const perJobFailures = new Map();
+
+      for (const job of state.filtered) {
+        const events = getErrorEvents(job);
+        let countRecent = 0;
+        for (const ev of events) {
+          const key = dayKey(ev);
+          if (!allMap.has(key)) continue;
+          allMap.set(key, allMap.get(key) + 1);
+          countRecent += 1;
+          if (job.id === state.selectedJobId) {
+            selectedMap.set(key, selectedMap.get(key) + 1);
+          }
+        }
+        perJobFailures.set(job, countRecent);
+      }
+
+      const dataAll = days7.map(d => allMap.get(dayKey(d)) || 0);
+      const dataSel = days7.map(d => selectedMap.get(dayKey(d)) || 0);
+
+      state.charts.failure?.destroy();
+      state.charts.failure = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'All job errors',
+              data: dataAll,
+              backgroundColor: '#ff5f6da0',
+              borderColor: '#ff7b87',
+              borderWidth: 1
+            },
+            {
+              label: 'Selected job errors',
+              type: 'line',
+              data: dataSel,
+              borderColor: '#ffb86c',
+              pointBackgroundColor: '#ffb86c',
+              pointRadius: 3,
+              tension: 0.2,
+              hidden: !state.selectedJobId
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#d7e1ec' } },
+            tooltip: {
+              callbacks: {
+                afterBody: (items) => {
+                  if (!items.length) return '';
+                  return 'Jobs with >2 failures are listed below.';
+                }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#9aa7b3' }, grid: { color: '#253042' } },
+            y: { ticks: { color: '#9aa7b3', precision: 0 }, grid: { color: '#253042' }, beginAtZero: true }
+          }
+        }
+      });
+
+      const highFailureJobs = [...perJobFailures.entries()]
+        .filter(([_, c]) => c > 2)
+        .sort((a,b) => b[1] - a[1]);
+
+      meta.innerHTML = '';
+      if (!highFailureJobs.length) {
+        meta.innerHTML = '<span class="pill">No jobs above 2 failures in last 7 days</span>';
+      } else {
+        for (const [job, count] of highFailureJobs) {
+          const s = document.createElement('span');
+          s.className = 'pill alert';
+          s.textContent = `${job.name}: ${count} failures`;
+          if (state.selectedJobId === job.id) s.style.outline = '1px solid #ffb86c';
+          meta.appendChild(s);
+        }
+      }
+    }
+
+    function colorPalette(i) {
+      const colors = ['#5aa9ff','#8b7dff','#40d67a','#ffd166','#ff7aa2','#43d9d9','#f99545','#d67eff','#7ee787'];
+      return colors[i % colors.length];
+    }
+
+    function renderModelChart() {
+      const canvas = document.getElementById('modelCanvas');
+      const meta = document.getElementById('modelMeta');
+
+      if (!window.Chart) {
+        meta.innerHTML = '<span class="pill alert">Chart.js unavailable: model chart disabled.</span>';
+        return;
+      }
+
+      const counts = new Map();
+      for (const j of state.filtered) {
+        counts.set(j.model || 'unknown', (counts.get(j.model || 'unknown') || 0) + 1);
+      }
+      const labels = [...counts.keys()];
+      const data = labels.map(l => counts.get(l));
+      const selectedJob = state.filtered.find(j => j.id === state.selectedJobId);
+      const selectedModel = selectedJob?.model;
+
+      state.charts.model?.destroy();
+      state.charts.model = new Chart(canvas.getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: labels.map((_, i) => colorPalette(i) + 'cc'),
+            borderColor: labels.map(l => l === selectedModel ? '#ffb86c' : '#1c2431'),
+            borderWidth: labels.map(l => l === selectedModel ? 3 : 1),
+            offset: (ctx) => labels[ctx.dataIndex] === selectedModel ? 12 : 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#d7e1ec' } }
+          }
+        }
+      });
+
+      meta.innerHTML = '';
+      labels.forEach((label, i) => {
+        const span = document.createElement('span');
+        span.className = 'pill';
+        span.textContent = `${label}: ${data[i]} jobs`;
+        if (label === selectedModel) span.style.outline = '1px solid #ffb86c';
+        meta.appendChild(span);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    const tooltip = document.getElementById('tooltip');
+    function attachTooltip(el) {
+      el.addEventListener('mousemove', (e) => {
+        const text = el.dataset.tooltip;
+        if (!text) return;
+        tooltip.style.display = 'block';
+        tooltip.textContent = text;
+        tooltip.style.left = `${e.clientX + 12}px`;
+        tooltip.style.top = `${e.clientY + 12}px`;
+      });
+      el.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+      });
+    }
+
+    function refreshModelFilterOptions() {
+      const modelSelect = document.getElementById('modelFilter');
+      const current = modelSelect.value;
+      const models = [...new Set(state.jobs.map(j => j.model || 'unknown'))].sort((a,b) => a.localeCompare(b));
+      modelSelect.innerHTML = '<option value="all">All models</option>';
+      for (const m of models) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        modelSelect.appendChild(opt);
+      }
+      if (models.includes(current)) modelSelect.value = current;
+    }
+
+    function renderAll() {
+      renderHeatmap();
+      renderJobsTable();
+      renderFailureChart();
+      renderModelChart();
+      document.getElementById('datasetLabel').textContent = `Loaded: ${state.sourceLabel} (${state.filtered.length}/${state.jobs.length} jobs shown)`;
+    }
+
+    function loadData(raw, label = 'Uploaded file') {
+      const jobs = normalizeJobs(raw);
+      state.jobs = jobs;
+      state.sourceLabel = label;
+      refreshModelFilterOptions();
+      applyFilters();
+    }
+
+    function wireSorting() {
+      document.querySelectorAll('#jobsTable th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          if (state.sort.key === key) {
+            state.sort.dir *= -1;
+          } else {
+            state.sort.key = key;
+            state.sort.dir = 1;
+          }
+          renderJobsTable();
+        });
+      });
+    }
+
+    function initUpload() {
+      const dz = document.getElementById('dropzone');
+      const input = document.getElementById('fileInput');
+
+      dz.addEventListener('click', () => input.click());
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        await processFile(file);
+      });
+
+      ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dz.classList.add('dragover');
+      }));
+      ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+      }));
+
+      dz.addEventListener('drop', async (e) => {
+        const file = e.dataTransfer?.files?.[0];
+        if (!file) return;
+        await processFile(file);
+      });
+
+      async function processFile(file) {
+        const text = await file.text();
+        try {
+          const parsed = JSON.parse(text);
+          loadData(parsed, file.name);
+        } catch (err) {
+          alert(`Invalid JSON file: ${err.message}`);
+        }
+      }
+    }
+
+    function initControls() {
+      document.getElementById('statusFilter').addEventListener('change', applyFilters);
+      document.getElementById('modelFilter').addEventListener('change', applyFilters);
+      document.getElementById('clearSelection').addEventListener('click', () => {
+        state.selectedJobId = null;
+        renderAll();
+      });
+    }
+
+    function init() {
+      wireSorting();
+      initUpload();
+      initControls();
+      loadData(SAMPLE_DATA, 'Sample data');
+    }
+
+    init();
+  </script>
+</body>
+</html>
