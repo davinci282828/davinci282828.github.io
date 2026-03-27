@@ -1,0 +1,554 @@
+{
+  "events": [
+    {
+      "attachments": [
+        {
+          "fileUrl": "https://mail.google.com/?view=att\u0026th=19d15d36d9ee6004\u0026attid=0.1\u0026disp=attd\u0026zw",
+          "title": "AGENTIC SYSTEMS VOL. 2 AI MASTERCLASS.pkpass"
+        }
+      ],
+      "attendees": [
+        {
+          "email": "steven@manhattanmhc.com",
+          "responseStatus": "accepted",
+          "self": true
+        }
+      ],
+      "created": "2026-03-22T13:54:33.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "description": "Get up-to-date information at: https://luma.com/event/evt-F6BbM4qqpBsvKef?pk=g-9bMTVkae5bDNRGO\n\nAddress:\nThe DOCK\nMiami, Florida\nUnited States\n\nWe are super excited and honored to have 2 special guests for this edition of the AI MASTERCLASS series.\n\nSPECIAL GUEST 1 - Kye Gomez, founder \u0026 CEO of Swarms (https://www.swarms.ai/)\n\nSPECIAL GUEST 2 - Burhan Sebin, Chief AI Officer of eMerge Americas (https://emergeamericas.com/)\n\nSwarms is a marketplace for monetizing AI Agents with features that support the buying, selling, renting, subscribing, and tokenizing of AI Agents.\n\neMerge Americas has served as South Florida's largest annual congregation of the tech industry since 2014 with the upcoming 2026 annual conference themes being AI,…\n\nHosted by Burhan Sebin, COMMAND LABS \u0026 The LAB Miami",
+      "end": {
+        "dateTime": "2026-03-26T22:00:00-04:00",
+        "timeZone": "UTC"
+      },
+      "etag": "\"3548375348719294\"",
+      "eventType": "default",
+      "guestsCanInviteOthers": false,
+      "htmlLink": "https://www.google.com/calendar/event?eid=X2Nscjc4YmE2NnAxNjRqOWtlNW9uMGdqamVwNW1hcGkwY2xyNmFyamtlY242b3Q5ZWRsZ2cgc3RldmVuQG1hbmhhdHRhbm1oYy5jb20",
+      "iCalUID": "evt-F6BbM4qqpBsvKef@events.lu.ma",
+      "id": "_clr78ba66p164j9ke5on0gjjep5mapi0clr6arjkecn6ot9edlgg",
+      "kind": "calendar#event",
+      "location": "The DOCK, 400 NW 26th St, Miami, FL 33127, USA",
+      "organizer": {
+        "displayName": "Burhan Sebin",
+        "email": "calendar-invite@lu.ma"
+      },
+      "privateCopy": true,
+      "reminders": {
+        "useDefault": true
+      },
+      "start": {
+        "dateTime": "2026-03-26T18:00:00-04:00",
+        "timeZone": "UTC"
+      },
+      "status": "confirmed",
+      "summary": "AGENTIC SYSTEMS VOL. 2 AI MASTERCLASS",
+      "updated": "2026-03-22T13:54:34.359Z"
+    },
+    {
+      "created": "2026-03-22T13:56:46.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "description": "Get up-to-date information at: https://luma.com/ai-masterclass?pk=g-9bMTVkae5bDNRGO\n\nAddress:\nThe DOCK\nMiami, Florida\nUnited States\n\nWe are super excited and honored to have 2 special guests for this edition of the AI MASTERCLASS series.\n\nSPECIAL GUEST 1 - Kye Gomez, founder \u0026 CEO of Swarms (https://www.swarms.ai/)\n\nSPECIAL GUEST 2 - Burhan Sebin, Chief AI Officer of eMerge Americas (https://emergeamericas.com/)\n\nSwarms is a marketplace for monetizing AI Agents with features that support the buying, selling, renting, subscribing, and tokenizing of AI Agents.\n\neMerge Americas has served as South Florida's largest annual congregation of the tech industry since 2014 with the upcoming 2026 annual conference themes being AI,…\n\nHosted by COMMAND LABS, The LAB Miami \u0026 Burhan Sebin",
+      "end": {
+        "dateTime": "2026-03-26T22:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3548375613999870\"",
+      "eventType": "default",
+      "htmlLink": "https://www.google.com/calendar/event?eid=YnZ0NW05YmZocHMwMW5oZjMwc2s4NmNlc28gc3RldmVuQG1hbmhhdHRhbm1oYy5jb20",
+      "iCalUID": "bvt5m9bfhps01nhf30sk86ceso@google.com",
+      "id": "bvt5m9bfhps01nhf30sk86ceso",
+      "kind": "calendar#event",
+      "location": "The DOCK, 400 NW 26th St, Miami, FL 33127, USA",
+      "organizer": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "reminders": {
+        "useDefault": true
+      },
+      "start": {
+        "dateTime": "2026-03-26T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "AGENTIC SYSTEMS VOL. 2 AI MASTERCLASS",
+      "updated": "2026-03-22T13:56:46.999Z"
+    },
+    {
+      "created": "2025-08-01T21:34:25.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "end": {
+        "dateTime": "2026-03-27T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3541194432286430\"",
+      "eventType": "default",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MTM3N2NsamoyMTEwOTY4bXI0b3BlbmZwdWZfMjAyNjAzMjdUMTMwMDAwWiBzdGV2ZW5AbWFuaGF0dGFubWhjLmNvbQ",
+      "iCalUID": "1377cljj2110968mr4openfpuf_R20260213T140000@google.com",
+      "id": "1377cljj2110968mr4openfpuf_20260327T130000Z",
+      "kind": "calendar#event",
+      "organizer": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "originalStartTime": {
+        "dateTime": "2026-03-27T09:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "1377cljj2110968mr4openfpuf_R20260213T140000",
+      "reminders": {
+        "useDefault": true
+      },
+      "start": {
+        "dateTime": "2026-03-27T09:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "Myg Meet",
+      "updated": "2026-02-09T00:33:36.143Z"
+    },
+    {
+      "created": "2026-02-26T00:13:06.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "end": {
+        "dateTime": "2026-03-27T09:05:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3544129592996670\"",
+      "eventType": "default",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NnNyZjM3dmNzdTlmZW04cThvbm9obHVlbmtfMjAyNjAzMjdUMTMwMDAwWiBzdGV2ZW5AbWFuaGF0dGFubWhjLmNvbQ",
+      "iCalUID": "6srf37vcsu9fem8q8onohluenk@google.com",
+      "id": "6srf37vcsu9fem8q8onohluenk_20260327T130000Z",
+      "kind": "calendar#event",
+      "organizer": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "originalStartTime": {
+        "dateTime": "2026-03-27T09:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "6srf37vcsu9fem8q8onohluenk",
+      "reminders": {
+        "useDefault": true
+      },
+      "start": {
+        "dateTime": "2026-03-27T09:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "Reminder Natalie Transfers To Chase",
+      "updated": "2026-02-26T00:13:16.498Z"
+    },
+    {
+      "created": "2026-01-21T21:45:53.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "end": {
+        "dateTime": "2026-03-27T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3540119829194846\"",
+      "eventType": "default",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MGFnc2JtYmdsdXM1Z202NGJxZ3E2N2k5YzVfMjAyNjAzMjdUMTUwMDAwWiBzdGV2ZW5AbWFuaGF0dGFubWhjLmNvbQ",
+      "iCalUID": "0agsbmbglus5gm64bqgq67i9c5@google.com",
+      "id": "0agsbmbglus5gm64bqgq67i9c5_20260327T150000Z",
+      "kind": "calendar#event",
+      "organizer": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "originalStartTime": {
+        "dateTime": "2026-03-27T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "0agsbmbglus5gm64bqgq67i9c5",
+      "reminders": {
+        "useDefault": true
+      },
+      "sequence": 1,
+      "start": {
+        "dateTime": "2026-03-27T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "Deep Work - do not book",
+      "updated": "2026-02-02T19:18:34.597Z"
+    },
+    {
+      "created": "2025-06-24T16:28:59.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "end": {
+        "dateTime": "2026-03-27T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3501565193918974\"",
+      "eventType": "default",
+      "htmlLink": "https://www.google.com/calendar/event?eid=N2NuOTVqZ2c0bnRobHJoa3JyZmhqZHQxajRfMjAyNjAzMjdUMTUwMDAwWiBzdGV2ZW5AbWFuaGF0dGFubWhjLmNvbQ",
+      "iCalUID": "7cn95jgg4nthlrhkrrfhjdt1j4@google.com",
+      "id": "7cn95jgg4nthlrhkrrfhjdt1j4_20260327T150000Z",
+      "kind": "calendar#event",
+      "organizer": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "originalStartTime": {
+        "dateTime": "2026-03-27T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "7cn95jgg4nthlrhkrrfhjdt1j4",
+      "reminders": {
+        "useDefault": true
+      },
+      "sequence": 2,
+      "start": {
+        "dateTime": "2026-03-27T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "Recertification: 03/30/2026 M-aid ETIN CERTIF",
+      "updated": "2025-06-24T16:29:56.959Z"
+    },
+    {
+      "attendees": [
+        {
+          "email": "steven@manhattanmhc.com",
+          "responseStatus": "accepted",
+          "self": true
+        },
+        {
+          "email": "patrick.luizzo@mirah.com",
+          "organizer": true,
+          "responseStatus": "accepted"
+        },
+        {
+          "email": "pmorana@gmail.com",
+          "responseStatus": "accepted"
+        },
+        {
+          "email": "narmeen@manhattanmhc.com",
+          "responseStatus": "needsAction"
+        },
+        {
+          "email": "tools@manhattanmhc.com",
+          "responseStatus": "needsAction"
+        }
+      ],
+      "conferenceData": {
+        "conferenceId": "xnp-okzb-cne",
+        "conferenceSolution": {
+          "iconUri": "https://fonts.gstatic.com/s/i/productlogos/meet_2020q4/v6/web-512dp/logo_meet_2020q4_color_2x_web_512dp.png",
+          "key": {
+            "type": "hangoutsMeet"
+          },
+          "name": "Google Meet"
+        },
+        "createRequest": {
+          "conferenceSolutionKey": {
+            "type": "hangoutsMeet"
+          },
+          "requestId": "91227c12-9931-4b93-9d04-b5a4856748f5",
+          "status": {
+            "statusCode": "success"
+          }
+        },
+        "entryPoints": [
+          {
+            "entryPointType": "video",
+            "label": "meet.google.com/xnp-okzb-cne",
+            "uri": "https://meet.google.com/xnp-okzb-cne"
+          },
+          {
+            "entryPointType": "more",
+            "pin": "2516713347164",
+            "uri": "https://tel.meet/xnp-okzb-cne?pin=2516713347164"
+          },
+          {
+            "entryPointType": "phone",
+            "label": "+1 330-975-0043",
+            "pin": "951918463",
+            "regionCode": "US",
+            "uri": "tel:+1-330-975-0043"
+          }
+        ]
+      },
+      "created": "2026-03-26T07:11:38.000Z",
+      "creator": {
+        "email": "patrick.luizzo@mirah.com"
+      },
+      "description": "Event Name: Introduction to Mirah\n\n\nLocation: This is a Google Meet web conference.\nYou can join this meeting from your computer, tablet, or smartphone.\nhttps://calendly.com/events/981a37dc-0d92-4f6b-b0e7-3bde87605107/google_meet\n\nNeed to make changes to this event?\nCancel: https://calendly.com/cancellations/01de4d01-9125-45e1-bfd0-07568223dae6\nReschedule: https://calendly.com/reschedulings/01de4d01-9125-45e1-bfd0-07568223dae6\n\nPowered by Calendly.com\n",
+      "end": {
+        "dateTime": "2026-03-27T13:15:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3549100105344926\"",
+      "eventType": "default",
+      "hangoutLink": "https://meet.google.com/xnp-okzb-cne",
+      "htmlLink": "https://www.google.com/calendar/event?eid=dG5qZWxibnA4dDBwcmlsNmxpdTBxZnJpYjQgc3RldmVuQG1hbmhhdHRhbm1oYy5jb20",
+      "iCalUID": "tnjelbnp8t0pril6liu0qfrib4@google.com",
+      "id": "tnjelbnp8t0pril6liu0qfrib4",
+      "kind": "calendar#event",
+      "location": "Google Meet (instructions in description)",
+      "organizer": {
+        "email": "patrick.luizzo@mirah.com"
+      },
+      "reminders": {
+        "useDefault": true
+      },
+      "start": {
+        "dateTime": "2026-03-27T12:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "Steven Buchwald and Patrick Luizzo",
+      "updated": "2026-03-26T18:34:12.672Z"
+    },
+    {
+      "attendees": [
+        {
+          "email": "steven@manhattanmhc.com",
+          "organizer": true,
+          "responseStatus": "accepted",
+          "self": true
+        },
+        {
+          "email": "toni@manhattanmhc.com",
+          "responseStatus": "accepted"
+        }
+      ],
+      "conferenceData": {
+        "conferenceId": "wkb-mpzr-dxy",
+        "conferenceSolution": {
+          "iconUri": "https://fonts.gstatic.com/s/i/productlogos/meet_2020q4/v6/web-512dp/logo_meet_2020q4_color_2x_web_512dp.png",
+          "key": {
+            "type": "hangoutsMeet"
+          },
+          "name": "Google Meet"
+        },
+        "entryPoints": [
+          {
+            "entryPointType": "video",
+            "label": "meet.google.com/wkb-mpzr-dxy",
+            "uri": "https://meet.google.com/wkb-mpzr-dxy"
+          },
+          {
+            "entryPointType": "more",
+            "pin": "2251404762197",
+            "uri": "https://tel.meet/wkb-mpzr-dxy?pin=2251404762197"
+          },
+          {
+            "entryPointType": "phone",
+            "label": "+1 316-975-0163",
+            "pin": "663407045",
+            "regionCode": "US",
+            "uri": "tel:+1-316-975-0163"
+          }
+        ]
+      },
+      "created": "2025-12-10T04:55:19.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "end": {
+        "dateTime": "2026-03-27T13:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3549091533829726\"",
+      "eventType": "default",
+      "hangoutLink": "https://meet.google.com/wkb-mpzr-dxy",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWxqczRiMWJ2ajBkanEzNTU1bGs3amJza3NfMjAyNjAzMjdUMTcwMDAwWiBzdGV2ZW5AbWFuaGF0dGFubWhjLmNvbQ",
+      "iCalUID": "5ljs4b1bvj0djq3555lk7jbsks@google.com",
+      "id": "5ljs4b1bvj0djq3555lk7jbsks_20260327T170000Z",
+      "kind": "calendar#event",
+      "organizer": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "originalStartTime": {
+        "dateTime": "2026-03-27T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5ljs4b1bvj0djq3555lk7jbsks",
+      "reminders": {
+        "useDefault": true
+      },
+      "sequence": 2,
+      "start": {
+        "dateTime": "2026-03-27T13:15:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "Toni \u0026 Steven",
+      "updated": "2026-03-26T17:22:46.914Z"
+    },
+    {
+      "attendees": [
+        {
+          "email": "steven@manhattanmhc.com",
+          "responseStatus": "declined",
+          "self": true
+        }
+      ],
+      "conferenceData": {
+        "conferenceId": "iiy-vxcx-ohu",
+        "conferenceSolution": {
+          "iconUri": "https://fonts.gstatic.com/s/i/productlogos/meet_2020q4/v6/web-512dp/logo_meet_2020q4_color_2x_web_512dp.png",
+          "key": {
+            "type": "hangoutsMeet"
+          },
+          "name": "Google Meet"
+        },
+        "entryPoints": [
+          {
+            "entryPointType": "video",
+            "label": "meet.google.com/iiy-vxcx-ohu",
+            "uri": "https://meet.google.com/iiy-vxcx-ohu"
+          },
+          {
+            "entryPointType": "more",
+            "pin": "7545952276262",
+            "uri": "https://tel.meet/iiy-vxcx-ohu?pin=7545952276262"
+          },
+          {
+            "entryPointType": "phone",
+            "label": "+1 205-938-4220",
+            "pin": "777938016",
+            "regionCode": "US",
+            "uri": "tel:+1-205-938-4220"
+          }
+        ]
+      },
+      "created": "2026-03-26T15:23:16.000Z",
+      "creator": {
+        "email": "james@apfx.ai"
+      },
+      "description": "Standing 30 Min Block if needed - will send ASYNC update if not",
+      "end": {
+        "dateTime": "2026-03-27T14:00:00-04:00",
+        "timeZone": "America/Los_Angeles"
+      },
+      "etag": "\"3549115209554878\"",
+      "eventType": "default",
+      "guestsCanSeeOtherGuests": false,
+      "hangoutLink": "https://meet.google.com/iiy-vxcx-ohu",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NDZwcTk4OGowdjRrb2VqaXVpdWNlMWdmMHFfMjAyNjAzMjdUMTczMDAwWiBzdGV2ZW5AbWFuaGF0dGFubWhjLmNvbQ",
+      "iCalUID": "46pq988j0v4koejiuiuce1gf0q@google.com",
+      "id": "46pq988j0v4koejiuiuce1gf0q_20260327T173000Z",
+      "kind": "calendar#event",
+      "organizer": {
+        "email": "james@apfx.ai"
+      },
+      "originalStartTime": {
+        "dateTime": "2026-03-27T13:30:00-04:00",
+        "timeZone": "America/Los_Angeles"
+      },
+      "recurringEventId": "46pq988j0v4koejiuiuce1gf0q",
+      "reminders": {
+        "useDefault": true
+      },
+      "start": {
+        "dateTime": "2026-03-27T13:30:00-04:00",
+        "timeZone": "America/Los_Angeles"
+      },
+      "status": "confirmed",
+      "summary": "MMHC x APFX - IF NEEDED ",
+      "updated": "2026-03-26T20:40:04.777Z"
+    },
+    {
+      "attendees": [
+        {
+          "email": "steven@manhattanmhc.com",
+          "organizer": true,
+          "responseStatus": "accepted",
+          "self": true
+        },
+        {
+          "email": "pmorana@gmail.com",
+          "responseStatus": "accepted"
+        },
+        {
+          "email": "me@paulmorana.com",
+          "responseStatus": "accepted"
+        }
+      ],
+      "conferenceData": {
+        "conferenceId": "skt-rqgc-xqp",
+        "conferenceSolution": {
+          "iconUri": "https://fonts.gstatic.com/s/i/productlogos/meet_2020q4/v6/web-512dp/logo_meet_2020q4_color_2x_web_512dp.png",
+          "key": {
+            "type": "hangoutsMeet"
+          },
+          "name": "Google Meet"
+        },
+        "entryPoints": [
+          {
+            "entryPointType": "video",
+            "label": "meet.google.com/skt-rqgc-xqp",
+            "uri": "https://meet.google.com/skt-rqgc-xqp"
+          },
+          {
+            "entryPointType": "more",
+            "pin": "9668402137381",
+            "uri": "https://tel.meet/skt-rqgc-xqp?pin=9668402137381"
+          },
+          {
+            "entryPointType": "phone",
+            "label": "+1 484-841-4602",
+            "pin": "668232169",
+            "regionCode": "US",
+            "uri": "tel:+1-484-841-4602"
+          }
+        ]
+      },
+      "created": "2026-03-25T18:36:36.000Z",
+      "creator": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "end": {
+        "dateTime": "2026-03-27T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "etag": "\"3548934212016766\"",
+      "eventType": "default",
+      "hangoutLink": "https://meet.google.com/skt-rqgc-xqp",
+      "htmlLink": "https://www.google.com/calendar/event?eid=N2JyZjcwYW43cmc5MXBqOTg1NmVrNzh0Zmogc3RldmVuQG1hbmhhdHRhbm1oYy5jb20",
+      "iCalUID": "7brf70an7rg91pj9856ek78tfj@google.com",
+      "id": "7brf70an7rg91pj9856ek78tfj",
+      "kind": "calendar#event",
+      "organizer": {
+        "email": "steven@manhattanmhc.com",
+        "self": true
+      },
+      "reminders": {
+        "useDefault": true
+      },
+      "start": {
+        "dateTime": "2026-03-27T13:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "status": "confirmed",
+      "summary": "Paul x Steven",
+      "updated": "2026-03-25T19:31:46.008Z"
+    }
+  ]
+}

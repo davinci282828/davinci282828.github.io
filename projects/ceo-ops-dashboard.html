@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEO Ops Status Dashboard</title>
+  <style>
+    :root {
+      --bg: #1a1a1a;
+      --panel: #232323;
+      --panel-2: #2a2a2a;
+      --text: #f3f3f3;
+      --muted: #b7b7b7;
+      --border: #3a3a3a;
+      --ok: #49d17d;
+      --warn: #f3be4a;
+      --err: #ff6b6b;
+      --skip: #8a8a8a;
+      --phase0: #8a8a8a;
+      --phase1: #f3be4a;
+      --phase2: #49d17d;
+      --phase3: #57a3ff;
+      --shadow: 0 6px 24px rgba(0,0,0,.25);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.35;
+    }
+    .wrap { max-width: 1500px; margin: 0 auto; padding: 20px; }
+    h1 { margin: 0 0 6px 0; font-size: 1.5rem; }
+    .subtitle { color: var(--muted); margin-bottom: 18px; }
+    .error-box {
+      background: #3a1919;
+      border: 1px solid #7f2b2b;
+      color: #ffd7d7;
+      padding: 14px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .name {
+      font-weight: 700;
+      font-size: .98rem;
+      letter-spacing: .1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status {
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 999px;
+      background: #151515;
+      border: 1px solid var(--border);
+    }
+    .phase-pill {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: .8rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .phase-0 { color: var(--phase0); border-color: color-mix(in srgb, var(--phase0) 45%, transparent); background: color-mix(in srgb, var(--phase0) 12%, transparent); }
+    .phase-1 { color: var(--phase1); border-color: color-mix(in srgb, var(--phase1) 45%, transparent); background: color-mix(in srgb, var(--phase1) 12%, transparent); }
+    .phase-2 { color: var(--phase2); border-color: color-mix(in srgb, var(--phase2) 45%, transparent); background: color-mix(in srgb, var(--phase2) 12%, transparent); }
+    .phase-3 { color: var(--phase3); border-color: color-mix(in srgb, var(--phase3) 45%, transparent); background: color-mix(in srgb, var(--phase3) 12%, transparent); }
+
+    .meta { color: var(--muted); font-size: .84rem; }
+    .meta b { color: var(--text); font-weight: 600; }
+
+    .progress-row {
+      margin-top: auto;
+      display: grid;
+      gap: 5px;
+    }
+    .progress-label { color: var(--muted); font-size: .8rem; }
+    .progress-track {
+      width: 100%;
+      background: #151515;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      height: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #5ecbff, #49d17d);
+    }
+
+    .spark-wrap {
+      margin-top: 4px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #171717;
+      padding: 6px;
+    }
+
+    .section {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .section h2 {
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+    }
+    .banner {
+      background: #3a3014;
+      border: 1px solid #8e6e20;
+      color: #ffe8a1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .override-list { margin: 0; padding-left: 18px; color: var(--muted); }
+
+    .corrections { display: grid; gap: 8px; }
+    details {
+      border: 1px solid var(--border);
+      background: #1d1d1d;
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    summary {
+      cursor: pointer;
+      color: #ececec;
+      font-size: .9rem;
+      outline: none;
+    }
+    .full-entry {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .85rem;
+      display: grid;
+      gap: 5px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .heartbeat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 8px;
+    }
+    .metric {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      background: #1c1c1c;
+      font-size: .9rem;
+    }
+    .metric .label { color: var(--muted); font-size: .78rem; margin-bottom: 2px; }
+
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: repeat(3, minmax(220px, 1fr)); }
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+      .heartbeat-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+    }
+    @media (max-width: 540px) {
+      .wrap { padding: 12px; }
+      .grid { grid-template-columns: 1fr; }
+      .heartbeat-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>CEO Ops Status Dashboard</h1>
+    <div class="subtitle">Real-time launch reliability view for Systems 1-5 (Mar 27-31) + System 0 heartbeat.</div>
+
+    <div id="errorContainer" class="error-box" style="display:none;"></div>
+
+    <section id="overrideSection" class="section" style="display:none;">
+      <div id="overrideBanner" class="banner"></div>
+      <ul id="overrideList" class="override-list"></ul>
+    </section>
+
+    <section id="systemsSection">
+      <div id="systemGrid" class="grid"></div>
+    </section>
+
+    <section class="section">
+      <h2>Corrections Log Summary</h2>
+      <div id="corrections" class="corrections"></div>
+    </section>
+
+    <section class="section">
+      <h2>System 0: Operations Heartbeat</h2>
+      <div id="heartbeat" class="heartbeat-grid"></div>
+    </section>
+  </div>
+
+  <script>
+    const TODAY = new Date();
+    const REQUIRED_SCORECARD_COLUMNS = ["system", "phase", "streak", "last_error_date", "last_error_desc", "last_delivery", "gate_target", "gate_met"];
+
+    const SYSTEMS = [
+      {
+        key: "agendas",
+        label: "Meeting Agendas",
+        icon: "📋",
+        aliases: ["agendas", "meeting agendas", "meeting_agendas", "meeting-agendas", "system 1"],
+        runDirs: ["agendas", "meeting-agendas", "meeting_agendas"],
+        cadence: "nightly",
+        nextScheduled: "Tonight 9 PM"
+      },
+      {
+        key: "slack",
+        label: "Slack Thread Screening",
+        icon: "🔔",
+        aliases: ["slack", "slack thread screening", "thread screening", "system 2"],
+        runDirs: ["slack", "slack-thread-screening", "thread-screening"],
+        cadence: "twice_daily",
+        nextScheduled: "Today 4 PM"
+      },
+      {
+        key: "followup",
+        label: "Fireflies Follow-up",
+        icon: "📊",
+        aliases: ["followup", "fireflies", "fireflies follow-up", "fireflies follow up", "system 3"],
+        runDirs: ["followup", "fireflies-followup", "fireflies", "fireflies-follow-up"],
+        cadence: "weekly",
+        nextScheduled: "Monday 9 AM"
+      },
+      {
+        key: "marketing",
+        label: "Marketing Intelligence Loop",
+        icon: "📈",
+        aliases: ["marketing", "marketing intelligence loop", "system 4"],
+        runDirs: ["marketing", "marketing-intelligence", "marketing-intelligence-loop"],
+        cadence: "weekly",
+        nextScheduled: "Monday 10 AM"
+      },
+      {
+        key: "calendar",
+        label: "Proactive Calendar Management",
+        icon: "📅",
+        aliases: ["calendar", "proactive calendar management", "system 5"],
+        runDirs: ["calendar", "proactive-calendar-management", "proactive-calendar"],
+        cadence: "daily",
+        nextScheduled: "Tomorrow 8 AM"
+      }
+    ];
+
+    const BASE_CANDIDATES = [
+      "../../projects/ceo-ops-system",
+      "../projects/ceo-ops-system",
+      "projects/ceo-ops-system",
+      "/projects/ceo-ops-system"
+    ];
+
+    async function fetchText(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.text();
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    function normalize(s) {
+      return String(s || "")
+        .toLowerCase()
+        .replace(/[_-]+/g, " ")
+        .replace(/[^a-z0-9 ]+/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function parseDateLoose(s) {
+      if (!s) return null;
+      if (s instanceof Date) return isNaN(s) ? null : s;
+      const raw = String(s).trim();
+      if (!raw || /^never$/i.test(raw)) return null;
+      const d = new Date(raw.replace(/(\d)(AM|PM)$/i, "$1 $2"));
+      if (!isNaN(d)) return d;
+      const m = raw.match(/(\d{4}-\d{2}-\d{2})/);
+      if (m) {
+        const d2 = new Date(m[1] + "T00:00:00");
+        return isNaN(d2) ? null : d2;
+      }
+      return null;
+    }
+
+    function fmtDateTime(s) {
+      const d = parseDateLoose(s);
+      if (!d) return "Never";
+      const y = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, "0");
+      const da = String(d.getDate()).padStart(2, "0");
+      let h = d.getHours();
+      const min = String(d.getMinutes()).padStart(2, "0");
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      return `${y}-${mo}-${da} ${h}:${min} ${ampm}`;
+    }
+
+    function dateStr(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function isWeekend(d) {
+      const day = d.getDay();
+      return day === 0 || day === 6;
+    }
+
+    function truncate80(s) {
+      const raw = String(s || "").trim();
+      if (raw.length <= 80) return raw;
+      return raw.slice(0, 77) + "...";
+    }
+
+    function parseMarkdownTable(md) {
+      const lines = md.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const headerIndex = lines.findIndex(l => /^\|/.test(l) && /\bsystem\b/i.test(l));
+      if (headerIndex < 0) throw new Error("No scorecard header");
+
+      const tableLines = [];
+      for (let i = headerIndex; i < lines.length; i++) {
+        if (!/^\|/.test(lines[i])) break;
+        tableLines.push(lines[i]);
+      }
+      if (tableLines.length < 2) throw new Error("Malformed table");
+
+      const splitRow = (line) => line.split("|").slice(1, -1).map(c => c.trim());
+      const headers = splitRow(tableLines[0]).map(h => h.toLowerCase());
+      for (const req of REQUIRED_SCORECARD_COLUMNS) {
+        if (!headers.includes(req)) throw new Error("Missing required scorecard column: " + req);
+      }
+
+      const rows = [];
+      for (let i = 1; i < tableLines.length; i++) {
+        if (/^\|\s*[-:]+/.test(tableLines[i])) continue;
+        const cells = splitRow(tableLines[i]);
+        if (!cells.length) continue;
+        const row = {};
+        headers.forEach((h, idx) => row[h] = cells[idx] ?? "");
+        rows.push(row);
+      }
+      if (!rows.length) throw new Error("No scorecard rows");
+      return rows;
+    }
+
+    function matchSystemRow(rows, cfg) {
+      return rows.find(row => {
+        const s = normalize(row.system);
+        return cfg.aliases.some(a => s.includes(normalize(a)));
+      }) || null;
+    }
+
+    function phaseClass(phaseNum) {
+      const n = Math.max(0, Math.min(3, Number(phaseNum) || 0));
+      return `phase-${n}`;
+    }
+
+    function humanSystem(s) {
+      const n = normalize(s);
+      const hit = SYSTEMS.find(x => x.aliases.some(a => normalize(a) === n || n.includes(normalize(a))));
+      return hit ? hit.label : (String(s || "").trim() || "Unknown");
+    }
+
+    function isOverrideActiveOnDate(override, d) {
+      if (!override || normalize(override.action) !== "pause") return false;
+      const until = parseDateLoose(override.until);
+      if (!until) return false;
+      const check = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const end = new Date(until.getFullYear(), until.getMonth(), until.getDate());
+      return check <= end;
+    }
+
+    function scheduledOn(cadence, d) {
+      if (cadence === "weekly") return d.getDay() === 1;
+      return true;
+    }
+
+    function detectStatusSymbol(data) {
+      if (data.overridePaused) return "➖";
+      if (data.hasError || data.isLate) return "⚠️";
+      if (!data.lastDelivery) return "⏳";
+      return "✅";
+    }
+
+    function computeLate(cfg, lastDelivery, phase) {
+      if ((Number(phase) || 0) === 0 || !lastDelivery) return false;
+      const now = TODAY;
+      const diffDays = (now - lastDelivery) / (1000 * 60 * 60 * 24);
+      if (cfg.cadence === "nightly" || cfg.cadence === "daily") return diffDays > 1.5;
+      if (cfg.cadence === "twice_daily") return diffDays > 1.0;
+      if (cfg.cadence === "weekly") return diffDays > 8.0;
+      return false;
+    }
+
+    async function detectBasePath() {
+      for (const base of BASE_CANDIDATES) {
+        try {
+          await fetchText(`${base}/SCORECARD.md`);
+          return base;
+        } catch (_) {}
+      }
+      return BASE_CANDIDATES[0];
+    }
+
+    function showFatal(msg) {
+      const el = document.getElementById("errorContainer");
+      el.textContent = msg;
+      el.style.display = "block";
+      document.getElementById("systemsSection").style.display = "none";
+    }
+
+    function renderSystemCards(rows, overrides, basePath, corrections) {
+      const grid = document.getElementById("systemGrid");
+      grid.innerHTML = "";
+
+      SYSTEMS.forEach(cfg => {
+        const row = matchSystemRow(rows, cfg) || {};
+        const phase = Number(row.phase) || 0;
+        const streak = Number(row.streak) || 0;
+        const gateTarget = Math.max(0, Number(row.gate_target) || 0);
+        const gateMet = Math.max(0, Number(row.gate_met) || 0);
+        const percent = gateTarget > 0 ? Math.min(100, Math.round((gateMet / gateTarget) * 10000) / 100) : 0;
+
+        const lastDeliveryDate = parseDateLoose(row.last_delivery);
+        const lastDelivery = row.last_delivery ? fmtDateTime(row.last_delivery) : "Never";
+        const lastErrorDate = parseDateLoose(row.last_error_date);
+        const hasError = !!lastErrorDate && (!lastDeliveryDate || lastErrorDate >= lastDeliveryDate);
+
+        const systemOverrides = overrides.filter(o => {
+          const n = normalize(o.system);
+          return cfg.aliases.some(a => n.includes(normalize(a)));
+        });
+        const overridePaused = systemOverrides.some(o => isOverrideActiveOnDate(o, TODAY));
+
+        const isLate = computeLate(cfg, lastDeliveryDate, phase);
+        const status = detectStatusSymbol({ overridePaused, hasError, isLate, lastDelivery: lastDeliveryDate });
+
+        const trustText = `${streak} consecutive deliveries, ${hasError ? "1 recent error" : "0 errors"}`;
+        const nextText = overridePaused
+          ? `Paused until ${systemOverrides.find(o => isOverrideActiveOnDate(o, TODAY)).until}`
+          : cfg.nextScheduled;
+
+        const card = document.createElement("article");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="top">
+            <div>
+              <div class="name">${cfg.icon} ${cfg.label}</div>
+              <div class="phase-pill ${phaseClass(phase)}">Phase ${phase}</div>
+            </div>
+            <div class="status" title="Current status">${status}</div>
+          </div>
+          <div class="meta"><b>Trust streak:</b> ${trustText}</div>
+          <div class="meta"><b>Last delivery:</b> ${lastDeliveryDate ? lastDelivery : "Never"}</div>
+          <div class="meta"><b>Next scheduled:</b> ${nextText}</div>
+          <div class="spark-wrap" id="spark-${cfg.key}"></div>
+          <div class="progress-row">
+            <div class="progress-label">${gateMet}/${gateTarget || 0} toward Phase ${Math.min(3, phase + 1)}</div>
+            <div class="progress-track"><div class="progress-fill" style="width:${percent}%;"></div></div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      SYSTEMS.forEach(cfg => {
+        renderSparkline(cfg, overrides, basePath, corrections).catch(() => {
+          const host = document.getElementById(`spark-${cfg.key}`);
+          if (host) host.textContent = "Sparkline unavailable";
+        });
+      });
+    }
+
+    async function fetchRunContent(basePath, cfg, dayString) {
+      for (const dir of cfg.runDirs) {
+        try {
+          const text = await fetchText(`${basePath}/runs/${dir}/${dayString}.md`);
+          return text;
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    function correctionLookup(corrections) {
+      const set = new Set();
+      for (const c of corrections) {
+        const d = c.date?.slice(0, 10);
+        const sys = normalize(c.system);
+        if (!d || !sys) continue;
+        const cfg = SYSTEMS.find(s => s.aliases.some(a => sys.includes(normalize(a))));
+        if (!cfg) continue;
+        set.add(`${cfg.key}|${d}`);
+      }
+      return set;
+    }
+
+    async function renderSparkline(cfg, overrides, basePath, corrections) {
+      const host = document.getElementById(`spark-${cfg.key}`);
+      if (!host) return;
+
+      const corrSet = correctionLookup(corrections);
+      const dots = [];
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(TODAY);
+        d.setHours(0,0,0,0);
+        d.setDate(d.getDate() - i);
+        const ds = dateStr(d);
+
+        const relevantOverrides = overrides.filter(o => cfg.aliases.some(a => normalize(o.system).includes(normalize(a))));
+        const paused = relevantOverrides.some(o => isOverrideActiveOnDate(o, d));
+
+        let outcome = "skipped";
+        let color = "var(--skip)";
+
+        if (paused || isWeekend(d) || !scheduledOn(cfg.cadence, d)) {
+          outcome = paused ? "skipped (override)" : "skipped";
+          color = "var(--skip)";
+        } else {
+          const content = await fetchRunContent(basePath, cfg, ds);
+          const corrHit = corrSet.has(`${cfg.key}|${ds}`);
+
+          if (content) {
+            if (corrHit || /(\berror\b|\bfailed\b|\bfailure\b|👎)/i.test(content)) {
+              outcome = "error";
+              color = "var(--err)";
+            } else {
+              outcome = "success";
+              color = "var(--ok)";
+            }
+          } else {
+            outcome = "error";
+            color = "var(--err)";
+          }
+        }
+
+        dots.push({ date: ds, outcome, color });
+      }
+
+      const width = 210;
+      const height = 22;
+      const pad = 8;
+      const gap = (width - pad * 2) / (dots.length - 1);
+
+      const circles = dots.map((dot, i) => {
+        const x = pad + i * gap;
+        return `<circle cx="${x.toFixed(2)}" cy="11" r="4.2" fill="${dot.color}"><title>${dot.date} — ${dot.outcome}</title></circle>`;
+      }).join("");
+
+      host.innerHTML = `
+        <svg width="100%" viewBox="0 0 ${width} ${height}" role="img" aria-label="Last 14 delivery outcomes for ${cfg.label}">
+          <line x1="${pad}" y1="11" x2="${width - pad}" y2="11" stroke="#333" stroke-width="1" />
+          ${circles}
+        </svg>
+      `;
+    }
+
+    function parseCorrections(logText) {
+      return logText
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(Boolean)
+        .map(line => {
+          const parts = line.split("|").map(p => p.trim());
+          if (parts.length < 5) return null;
+          return {
+            date: parts[0].replace(/^\[|\]$/g, ""),
+            system: parts[1].replace(/^\[|\]$/g, ""),
+            wrong: parts[2].replace(/^\[|\]$/g, ""),
+            correct: parts[3].replace(/^\[|\]$/g, ""),
+            rule: parts[4].replace(/^\[|\]$/g, "")
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          const da = parseDateLoose(a.date) || new Date(0);
+          const db = parseDateLoose(b.date) || new Date(0);
+          return db - da;
+        });
+    }
+
+    function renderCorrectionsSection(corrections, fileFound) {
+      const box = document.getElementById("corrections");
+      box.innerHTML = "";
+
+      if (!fileFound) {
+        box.textContent = "No corrections file found";
+        return;
+      }
+
+      if (!corrections.length) {
+        box.textContent = "No errors logged ✅";
+        return;
+      }
+
+      corrections.slice(0, 5).forEach(c => {
+        const d = document.createElement("details");
+        d.innerHTML = `
+          <summary>[${c.date}] | ${humanSystem(c.system)} | ${truncate80(c.wrong)}</summary>
+          <div class="full-entry">
+            <div><b>What went wrong:</b> ${c.wrong || "—"}</div>
+            <div><b>Correct output:</b> ${c.correct || "—"}</div>
+            <div><b>Rule change:</b> ${c.rule || "—"}</div>
+          </div>
+        `;
+        box.appendChild(d);
+      });
+    }
+
+    function normalizeOverrides(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (Array.isArray(raw.overrides)) return raw.overrides;
+      return [];
+    }
+
+    function renderOverrides(overrides) {
+      const active = overrides.filter(o => isOverrideActiveOnDate(o, TODAY));
+      const section = document.getElementById("overrideSection");
+      if (!active.length) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      const banner = document.getElementById("overrideBanner");
+      const list = document.getElementById("overrideList");
+      list.innerHTML = "";
+
+      if (active.length === 1) {
+        const o = active[0];
+        banner.textContent = `⚠️ 1 active override: ${humanSystem(o.system)} paused until ${o.until} — ${o.reason || "No reason provided"}`;
+      } else {
+        banner.textContent = `⚠️ ${active.length} active overrides`;
+      }
+
+      active.forEach(o => {
+        const li = document.createElement("li");
+        li.textContent = `${humanSystem(o.system)} paused until ${o.until} — ${o.reason || "No reason provided"}`;
+        list.appendChild(li);
+      });
+    }
+
+    async function fetchLatestHeartbeat(basePath) {
+      for (let i = 0; i < 60; i++) {
+        const d = new Date(TODAY);
+        d.setDate(d.getDate() - i);
+        const ds = dateStr(d);
+        try {
+          const text = await fetchText(`${basePath}/runs/heartbeat/${ds}.md`);
+          return { date: ds, text };
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    function parseHeartbeat(payload) {
+      if (!payload) {
+        return {
+          lastHeartbeat: "Unavailable",
+          systemsChecked: "0/5 ran",
+          freshness: "roster stale, tracker stale, calendar stale",
+          next: "Tonight 9:30 PM"
+        };
+      }
+
+      const text = payload.text;
+      const tsMatch = text.match(/(\d{4}-\d{2}-\d{2}[ T]\d{1,2}:\d{2}(?::\d{2})?(?: ?[AP]M)?)/i);
+      const systemsMatch = text.match(/systems checked\s*[:\-]?\s*(\d+\s*\/\s*5)/i);
+      const nextMatch = text.match(/next heartbeat\s*[:\-]?\s*(.+)/i);
+
+      const freshness = { roster: "stale", tracker: "stale", calendar: "stale" };
+      const fresRegex = /(roster|tracker|calendar)[^\n]*(ok|stale)/ig;
+      let m;
+      while ((m = fresRegex.exec(text)) !== null) {
+        freshness[m[1].toLowerCase()] = m[2].toLowerCase();
+      }
+
+      return {
+        lastHeartbeat: tsMatch ? fmtDateTime(tsMatch[1]) : payload.date,
+        systemsChecked: systemsMatch ? `${systemsMatch[1].replace(/\s+/g, "")} ran` : "0/5 ran",
+        freshness: `roster ${freshness.roster}, tracker ${freshness.tracker}, calendar ${freshness.calendar}`,
+        next: nextMatch ? nextMatch[1].trim() : "Tonight 9:30 PM"
+      };
+    }
+
+    function renderHeartbeat(hb) {
+      const host = document.getElementById("heartbeat");
+      host.innerHTML = "";
+      const metrics = [
+        ["Last heartbeat", hb.lastHeartbeat],
+        ["Systems checked", hb.systemsChecked],
+        ["Data freshness", hb.freshness],
+        ["Next heartbeat", hb.next]
+      ];
+      metrics.forEach(([label, value]) => {
+        const div = document.createElement("div");
+        div.className = "metric";
+        div.innerHTML = `<div class="label">${label}</div><div>${value}</div>`;
+        host.appendChild(div);
+      });
+    }
+
+    async function init() {
+      const basePath = await detectBasePath();
+
+      let scorecardText;
+      try {
+        scorecardText = await fetchText(`${basePath}/SCORECARD.md`);
+      } catch (_) {
+        showFatal("SCORECARD.md not found or invalid — cannot load dashboard");
+        renderCorrectionsSection([], false);
+        renderHeartbeat(parseHeartbeat(null));
+        return;
+      }
+
+      let rows;
+      try {
+        rows = parseMarkdownTable(scorecardText);
+      } catch (_) {
+        showFatal("SCORECARD.md not found or invalid — cannot load dashboard");
+        renderCorrectionsSection([], false);
+        renderHeartbeat(parseHeartbeat(null));
+        return;
+      }
+
+      let corrections = [];
+      let correctionsFileFound = true;
+      try {
+        const cText = await fetchText(`${basePath}/corrections.log`);
+        corrections = parseCorrections(cText);
+      } catch (_) {
+        correctionsFileFound = false;
+      }
+
+      let overrides = [];
+      try {
+        const oJson = await fetchJson(`${basePath}/overrides.json`);
+        overrides = normalizeOverrides(oJson);
+      } catch (_) {
+        overrides = [];
+      }
+
+      renderOverrides(overrides);
+      renderSystemCards(rows, overrides, basePath, corrections);
+      renderCorrectionsSection(corrections, correctionsFileFound);
+
+      const latestHeartbeat = await fetchLatestHeartbeat(basePath);
+      renderHeartbeat(parseHeartbeat(latestHeartbeat));
+    }
+
+    init().catch(() => {
+      showFatal("SCORECARD.md not found or invalid — cannot load dashboard");
+    });
+  </script>
+</body>
+</html>
