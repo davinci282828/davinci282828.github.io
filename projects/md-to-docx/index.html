@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Markdown → DOCX Converter</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg-soft: #171a23;
+      --bg-elev: #1f2430;
+      --text: #e7ecf3;
+      --muted: #9aa4b2;
+      --primary: #6ea8fe;
+      --primary-strong: #4f8ef7;
+      --border: #2d3445;
+      --danger: #ff6b6b;
+      --ok: #5fd38d;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 15% -10%, #1c2233 0%, var(--bg) 40%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .header {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent), var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .title {
+      margin: 0 0 .35rem;
+      font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+      letter-spacing: 0.2px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .75rem;
+      margin-top: .9rem;
+    }
+
+    .input {
+      width: 100%;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: .7rem .8rem;
+      font-size: .95rem;
+      outline: none;
+    }
+
+    .input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.18);
+    }
+
+    .btn {
+      border: 1px solid #3f6dc8;
+      background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+      color: #f8fbff;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: .7rem 1rem;
+      cursor: pointer;
+      min-width: 180px;
+      transition: transform .08s ease, filter .2s ease;
+    }
+
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: translateY(1px); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      min-height: 65vh;
+    }
+
+    .panel {
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 320px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      padding: .8rem .9rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.015);
+      font-size: .9rem;
+      color: var(--muted);
+    }
+
+    #markdownInput {
+      border: 1px solid transparent;
+      resize: vertical;
+      width: 100%;
+      min-height: 420px;
+      max-height: 80vh;
+      flex: 1;
+      background: #0d1016;
+      color: var(--text);
+      padding: 1rem;
+      font-size: .95rem;
+      line-height: 1.55;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      outline: none;
+      transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+    }
+
+    #markdownInput.drag-over {
+      border-color: rgba(110, 168, 254, 0.9);
+      border-style: dashed;
+      background: #111826;
+      box-shadow: inset 0 0 0 1px rgba(110, 168, 254, 0.35);
+    }
+
+    .counts {
+      display: flex;
+      gap: 1rem;
+      color: var(--muted);
+      font-size: .86rem;
+      padding: .7rem .9rem;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.01);
+    }
+
+    #preview {
+      padding: 1rem 1.1rem 1.2rem;
+      overflow: auto;
+      line-height: 1.6;
+      min-height: 420px;
+      color: #dbe5f4;
+    }
+
+    #preview h1, #preview h2, #preview h3, #preview h4 {
+      color: #eef4ff;
+      margin-top: 1.15em;
+      margin-bottom: .45em;
+      line-height: 1.25;
+    }
+
+    #preview p { margin: .7em 0; }
+    #preview a { color: #8ec5ff; }
+    #preview strong { color: #f4f8ff; }
+    #preview code {
+      background: rgba(255,255,255,0.08);
+      padding: .15rem .35rem;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: .9em;
+    }
+
+    #preview pre {
+      background: #0b0f15;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: auto;
+      padding: .8rem;
+    }
+
+    #preview blockquote {
+      margin: .9em 0;
+      padding: .2em .9em;
+      border-left: 4px solid #4f8ef7;
+      background: rgba(79, 142, 247, 0.08);
+      color: #c8d6ef;
+    }
+
+    #preview table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: .9em 0;
+      font-size: .93rem;
+    }
+
+    #preview th,
+    #preview td {
+      border: 1px solid var(--border);
+      padding: .5rem .6rem;
+      text-align: left;
+    }
+
+    #preview th { background: rgba(255,255,255,0.06); }
+
+    .status {
+      margin-top: .65rem;
+      font-size: .88rem;
+      color: var(--muted);
+      min-height: 1.1rem;
+    }
+
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--danger); }
+
+    @media (max-width: 960px) {
+      .main { grid-template-columns: 1fr; }
+      #markdownInput, #preview { min-height: 320px; }
+      .controls { grid-template-columns: 1fr; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1 class="title">Markdown → DOCX Converter</h1>
+      <p class="subtitle">Paste markdown, preview live, then press <strong>Convert &amp; Download</strong> (or <strong>Ctrl+Enter</strong>).</p>
+
+      <div class="controls">
+        <input id="filenameInput" class="input" type="text" value="document.docx" aria-label="Filename" />
+        <button id="convertBtn" class="btn" type="button">Convert &amp; Download</button>
+      </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+    </header>
+
+    <main class="main">
+      <section class="panel">
+        <div class="panel-head">
+          <span>Markdown Input</span>
+          <span>Shortcut: Ctrl+Enter</span>
+        </div>
+        <textarea id="markdownInput" spellcheck="false"></textarea>
+        <div class="counts">
+          <span id="wordCount">Words: 0</span>
+          <span id="charCount">Characters: 0</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span>Live Preview</span>
+          <span>Rendered with marked.js</span>
+        </div>
+        <article id="preview"></article>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    const { Document, Packer, Paragraph, HeadingLevel, TextRun, ExternalHyperlink, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType } = docx;
+
+    const markdownInput = document.getElementById('markdownInput');
+    const preview = document.getElementById('preview');
+    const filenameInput = document.getElementById('filenameInput');
+    const convertBtn = document.getElementById('convertBtn');
+    const wordCount = document.getElementById('wordCount');
+    const charCount = document.getElementById('charCount');
+    const statusEl = document.getElementById('status');
+
+    marked.setOptions({ gfm: true, breaks: true });
+
+    const SAMPLE_MARKDOWN = `# Markdown to DOCX Demo
+
+This tool converts **Markdown** into a downloadable *Word document*.
+
+## Features
+
+- Headings (H1-H4)
+- **Bold** and *italic* text
+- Bullet and numbered lists
+- Code blocks and inline \`code\`
+- Blockquotes, links, and tables
+
+### Numbered Steps
+
+1. Paste your markdown.
+2. Choose a filename.
+3. Press **Convert & Download**.
+
+#### Code Block
+
+\`\`\`js
+function greet(name) {
+  console.log('Hello, ' + name + '!');
+}
+\`\`\`
+
+> This is a blockquote. Great for notes, warnings, or context.
+
+Link example: [docx.js CDN](https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js)
+
+| Feature | Status |
+|---|---|
+| Live preview | ✅ |
+| DOCX export | ✅ |
+| Responsive UI | ✅ |
+`;
+
+    function setStatus(message = '', type = '') {
+      statusEl.textContent = message;
+      statusEl.className = 'status' + (type ? ` ${type}` : '');
+    }
+
+    function computeWordCount(text) {
+      const words = text.trim().match(/\S+/g);
+      return words ? words.length : 0;
+    }
+
+    function updatePreviewAndCounts() {
+      const text = markdownInput.value;
+      preview.innerHTML = marked.parse(text || '');
+      wordCount.textContent = `Words: ${computeWordCount(text)}`;
+      charCount.textContent = `Characters: ${text.length}`;
+    }
+
+    function ensureFilename(name) {
+      let out = (name || '').trim() || 'document.docx';
+      if (!/\.docx$/i.test(out)) out += '.docx';
+      return out;
+    }
+
+    function quoteStyle(depth = 0) {
+      if (!depth) return {};
+      return {
+        indent: { left: 280 * depth },
+        border: {
+          left: { color: '4F8EF7', space: 1, size: 18, style: BorderStyle.SINGLE }
+        },
+        spacing: { before: 120, after: 120 }
+      };
+    }
+
+    function makeTextRun(text, marks = {}) {
+      return new TextRun({
+        text: text || '',
+        bold: !!marks.bold,
+        italics: !!marks.italics,
+        strike: !!marks.strike,
+        font: marks.code ? 'Courier New' : undefined,
+        shading: marks.code ? { fill: 'EDEDED', color: 'auto' } : undefined
+      });
+    }
+
+    function inlineTokensToChildren(tokens = [], marks = {}) {
+      const out = [];
+      for (const token of tokens) {
+        if (!token) continue;
+
+        if (token.type === 'text') {
+          out.push(makeTextRun(token.text, marks));
+        } else if (token.type === 'strong') {
+          out.push(...inlineTokensToChildren(token.tokens || [], { ...marks, bold: true }));
+        } else if (token.type === 'em') {
+          out.push(...inlineTokensToChildren(token.tokens || [], { ...marks, italics: true }));
+        } else if (token.type === 'codespan') {
+          out.push(makeTextRun(token.text, { ...marks, code: true }));
+        } else if (token.type === 'del') {
+          out.push(...inlineTokensToChildren(token.tokens || [], { ...marks, strike: true }));
+        } else if (token.type === 'link') {
+          const linkChildren = inlineTokensToChildren(token.tokens || [{ type: 'text', text: token.text || token.href || '' }], marks);
+          out.push(new ExternalHyperlink({
+            link: token.href,
+            children: linkChildren.length ? linkChildren : [new TextRun({ text: token.href || '', style: 'Hyperlink' })]
+          }));
+        } else if (token.type === 'br') {
+          out.push(new TextRun({ break: 1 }));
+        } else if (token.type === 'html') {
+          if (token.text) out.push(makeTextRun(token.text.replace(/<[^>]*>/g, ''), marks));
+        } else if (token.type === 'escape') {
+          out.push(makeTextRun(token.text || '', marks));
+        } else if (token.type === 'image') {
+          const alt = token.text || 'image';
+          out.push(makeTextRun(`[Image: ${alt}]`, marks));
+        } else {
+          if (token.text) out.push(makeTextRun(token.text, marks));
+        }
+      }
+      return out;
+    }
+
+    function paragraphFromInline(tokens, extra = {}, quoteDepth = 0) {
+      const children = inlineTokensToChildren(tokens);
+      return new Paragraph({
+        ...(quoteStyle(quoteDepth)),
+        ...extra,
+        children: children.length ? children : [new TextRun('')]
+      });
+    }
+
+    function headingLevel(depth) {
+      if (depth === 1) return HeadingLevel.HEADING_1;
+      if (depth === 2) return HeadingLevel.HEADING_2;
+      if (depth === 3) return HeadingLevel.HEADING_3;
+      return HeadingLevel.HEADING_4;
+    }
+
+    function listParagraph(itemToken, ordered, level, quoteDepth) {
+      const firstBlock = (itemToken.tokens || []).find(t => t.type === 'paragraph' || t.type === 'text');
+      const inline = firstBlock?.tokens || itemToken.tokens?.[0]?.tokens || [{ type: 'text', text: itemToken.text || '' }];
+
+      const checkboxPrefix = itemToken.task ? (itemToken.checked ? '[x] ' : '[ ] ') : '';
+      const children = inlineTokensToChildren(inline);
+      if (checkboxPrefix) children.unshift(new TextRun({ text: checkboxPrefix }));
+
+      const listOpts = ordered
+        ? { numbering: { reference: 'md-numbering', level: Math.min(level, 8) } }
+        : { bullet: { level: Math.min(level, 8) } };
+
+      return new Paragraph({
+        ...(quoteStyle(quoteDepth)),
+        ...listOpts,
+        spacing: { after: 110 },
+        children: children.length ? children : [new TextRun('')]
+      });
+    }
+
+    function codeParagraph(text, quoteDepth = 0) {
+      const lines = String(text || '').split('\n');
+      const children = [];
+      for (let i = 0; i < lines.length; i++) {
+        children.push(new TextRun({ text: lines[i], font: 'Courier New', size: 20 }));
+        if (i < lines.length - 1) children.push(new TextRun({ break: 1 }));
+      }
+
+      return new Paragraph({
+        ...(quoteStyle(quoteDepth)),
+        spacing: { before: 120, after: 140 },
+        border: {
+          top: { style: BorderStyle.SINGLE, size: 6, color: 'D1D5DB' },
+          bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D1D5DB' },
+          left: { style: BorderStyle.SINGLE, size: 6, color: 'D1D5DB' },
+          right: { style: BorderStyle.SINGLE, size: 6, color: 'D1D5DB' }
+        },
+        shading: { fill: 'F5F5F5', color: 'auto' },
+        children
+      });
+    }
+
+    function tableFromToken(token, quoteDepth = 0) {
+      const rows = [];
+
+      if (Array.isArray(token.header) && token.header.length) {
+        rows.push(
+          new TableRow({
+            children: token.header.map((cell, i) => new TableCell({
+              width: { size: 100 / token.header.length, type: WidthType.PERCENTAGE },
+              children: [
+                new Paragraph({
+                  ...(quoteStyle(quoteDepth)),
+                  alignment: token.align?.[i] === 'center' ? AlignmentType.CENTER : token.align?.[i] === 'right' ? AlignmentType.RIGHT : AlignmentType.LEFT,
+                  children: inlineTokensToChildren(cell.tokens || [{ type: 'text', text: cell.text || '' }], { bold: true })
+                })
+              ]
+            }))
+          })
+        );
+      }
+
+      for (const row of token.rows || []) {
+        rows.push(
+          new TableRow({
+            children: row.map((cell, i) => new TableCell({
+              width: { size: 100 / row.length, type: WidthType.PERCENTAGE },
+              children: [
+                new Paragraph({
+                  ...(quoteStyle(quoteDepth)),
+                  alignment: token.align?.[i] === 'center' ? AlignmentType.CENTER : token.align?.[i] === 'right' ? AlignmentType.RIGHT : AlignmentType.LEFT,
+                  children: inlineTokensToChildren(cell.tokens || [{ type: 'text', text: cell.text || '' }])
+                })
+              ]
+            }))
+          })
+        );
+      }
+
+      return new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows
+      });
+    }
+
+    function tokensToDocx(tokens, ctx = { quoteDepth: 0, listLevel: 0 }) {
+      const nodes = [];
+
+      for (const token of tokens || []) {
+        if (!token) continue;
+
+        if (token.type === 'heading') {
+          nodes.push(new Paragraph({
+            ...(quoteStyle(ctx.quoteDepth)),
+            heading: headingLevel(token.depth),
+            spacing: { before: 220, after: 120 },
+            children: inlineTokensToChildren(token.tokens || [{ type: 'text', text: token.text || '' }])
+          }));
+        } else if (token.type === 'paragraph' || token.type === 'text') {
+          nodes.push(paragraphFromInline(token.tokens || [{ type: 'text', text: token.text || '' }], { spacing: { after: 140 } }, ctx.quoteDepth));
+        } else if (token.type === 'code') {
+          nodes.push(codeParagraph(token.text, ctx.quoteDepth));
+        } else if (token.type === 'blockquote') {
+          nodes.push(...tokensToDocx(token.tokens || [], { ...ctx, quoteDepth: ctx.quoteDepth + 1 }));
+        } else if (token.type === 'list') {
+          for (const item of token.items || []) {
+            nodes.push(listParagraph(item, !!token.ordered, ctx.listLevel, ctx.quoteDepth));
+            const nestedLists = (item.tokens || []).filter(t => t.type === 'list' || t.type === 'blockquote');
+            for (const nested of nestedLists) {
+              if (nested.type === 'list') {
+                nodes.push(...tokensToDocx([nested], { ...ctx, listLevel: ctx.listLevel + 1 }));
+              } else {
+                nodes.push(...tokensToDocx([nested], { ...ctx, quoteDepth: ctx.quoteDepth + 1 }));
+              }
+            }
+          }
+        } else if (token.type === 'table') {
+          nodes.push(tableFromToken(token, ctx.quoteDepth));
+        } else if (token.type === 'hr') {
+          nodes.push(new Paragraph({
+            ...(quoteStyle(ctx.quoteDepth)),
+            border: {
+              bottom: { style: BorderStyle.SINGLE, size: 6, color: 'C9CED6' }
+            },
+            children: [new TextRun('')]
+          }));
+        }
+      }
+
+      return nodes;
+    }
+
+    async function convertAndDownload() {
+      try {
+        setStatus('Converting markdown to DOCX…');
+
+        const markdown = markdownInput.value || '';
+        const tokens = marked.lexer(markdown, { gfm: true, breaks: true });
+        const children = tokensToDocx(tokens);
+
+        const doc = new Document({
+          numbering: {
+            config: [
+              {
+                reference: 'md-numbering',
+                levels: Array.from({ length: 9 }).map((_, level) => ({
+                  level,
+                  format: 'decimal',
+                  text: `%${level + 1}.`,
+                  alignment: AlignmentType.START
+                }))
+              }
+            ]
+          },
+          sections: [
+            {
+              properties: {},
+              children: children.length ? children : [new Paragraph('')]
+            }
+          ]
+        });
+
+        const blob = await Packer.toBlob(doc);
+        const filename = ensureFilename(filenameInput.value);
+        filenameInput.value = filename;
+        saveAs(blob, filename);
+        setStatus(`Done. Download started: ${filename}`, 'ok');
+      } catch (error) {
+        console.error(error);
+        setStatus(`Conversion failed: ${error?.message || 'Unknown error'}`, 'err');
+      }
+    }
+
+    markdownInput.addEventListener('input', updatePreviewAndCounts);
+
+    function getDroppedTextFile(dataTransfer) {
+      const files = Array.from(dataTransfer?.files || []);
+      return files.find(file => /\.(md|txt)$/i.test(file.name));
+    }
+
+    function setDragState(isActive) {
+      markdownInput.classList.toggle('drag-over', !!isActive);
+    }
+
+    markdownInput.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      const file = getDroppedTextFile(event.dataTransfer);
+      if (!file) {
+        event.dataTransfer.dropEffect = 'none';
+        setDragState(false);
+        return;
+      }
+
+      event.dataTransfer.dropEffect = 'copy';
+      setDragState(true);
+    });
+
+    markdownInput.addEventListener('dragleave', () => {
+      setDragState(false);
+    });
+
+    markdownInput.addEventListener('drop', async (event) => {
+      event.preventDefault();
+      setDragState(false);
+
+      const file = getDroppedTextFile(event.dataTransfer);
+      if (!file) {
+        setStatus('Only .md or .txt files can be dropped into the editor.', 'err');
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        markdownInput.value = text;
+        updatePreviewAndCounts();
+        setStatus(`Loaded ${file.name}`, 'ok');
+      } catch (error) {
+        console.error(error);
+        setStatus(`Failed to read ${file.name}: ${error?.message || 'Unknown error'}`, 'err');
+      }
+    });
+
+    convertBtn.addEventListener('click', convertAndDownload);
+
+    markdownInput.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        convertAndDownload();
+      }
+    });
+
+    filenameInput.addEventListener('blur', () => {
+      filenameInput.value = ensureFilename(filenameInput.value);
+    });
+
+    // Pre-load sample markdown on page load
+    markdownInput.value = SAMPLE_MARKDOWN;
+    updatePreviewAndCounts();
+    setStatus('Ready. Paste markdown and convert.', 'ok');
+  </script>
+</body>
+</html>
